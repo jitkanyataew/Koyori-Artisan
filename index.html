@@ -3,43 +3,55 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Koyori Artisan Directory | ทำเนียบช่างฝีมือโคยูริ</title>
+<title>Koyori Artisan Directory | ครูช่างในโครงการโคโยริ</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600&family=Prompt:wght@300;500;600&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --cream:#FAF7F2;--warm:#E8DFD0;--terracotta:#B5613A;--indigo:#2C3E6B;
-  --teal:#1E6B5A;--gold:#C49A3C;--text:#2A2520;--muted:#7A6E65;--light:#F5EFE8;
+  --cream:#FFFFFF;--warm:#D0D9F0;--terracotta:#CC1133;--indigo:#1A3A8F;
+  --teal:#0D47A1;--gold:#CC1133;--text:#1A1A2E;--muted:#6670A0;--light:#EEF2FF;
 }
-body{font-family:'Sarabun',sans-serif;background:var(--cream);color:var(--text);min-height:100vh}
+body{font-family:'Sarabun',sans-serif;background:#F5F7FF;color:var(--text);min-height:100vh}
 /* HEADER */
-header{background:var(--indigo);padding:2rem 1.5rem 1.5rem;position:relative;overflow:hidden}
-header::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 80% 50%,rgba(196,154,60,0.15) 0%,transparent 60%)}
-.header-inner{max-width:960px;margin:0 auto;position:relative}
-.logo-row{display:flex;align-items:center;gap:1rem;margin-bottom:.5rem}
-.logo-dot{width:10px;height:10px;border-radius:50%;background:var(--gold)}
-h1{font-family:'Prompt',sans-serif;font-size:clamp(1.4rem,4vw,2rem);font-weight:500;color:#fff;line-height:1.2}
-.subtitle{font-size:.85rem;color:rgba(255,255,255,0.65);margin-top:.25rem;letter-spacing:.03em}
-.stats-row{display:flex;gap:1.5rem;margin-top:1.2rem;flex-wrap:wrap}
-.stat{color:rgba(255,255,255,0.85);font-size:.82rem}
-.stat strong{color:var(--gold);font-size:1.1rem;display:block;font-family:'Prompt',sans-serif}
+header{background:linear-gradient(135deg,#1A3A8F 0%,#1E4FBF 55%,#0D47A1 100%);padding:3rem 1.5rem;position:relative;overflow:hidden;display:flex;justify-content:center;align-items:center}
+header::before{content:'';position:absolute;width:380px;height:380px;border-radius:50%;background:rgba(255,255,255,0.06);right:-90px;top:-130px;pointer-events:none}
+header::after{content:'';position:absolute;width:220px;height:220px;border-radius:50%;background:rgba(204,17,51,0.14);left:-50px;bottom:-70px;pointer-events:none}
+.header-inner{position:relative;z-index:1;max-width:700px;margin:0 auto;text-align:center}
+.header-bg-logo{position:absolute;right:-40px;top:50%;transform:translateY(-50%);width:340px;height:340px;object-fit:cover;opacity:.13;filter:brightness(1.8) contrast(0.8);pointer-events:none;z-index:0;border-radius:24px}
+@media(min-width:600px){.header-bg-logo{width:420px;height:420px;right:-20px}}
+@media(min-width:900px){.header-bg-logo{width:500px;height:500px;right:0}}
+.header-bg-spiral{position:absolute;left:-60px;bottom:-40px;width:280px;height:280px;object-fit:contain;opacity:.10;filter:brightness(2) contrast(0.7);pointer-events:none;z-index:0}
+@media(min-width:600px){.header-bg-spiral{width:340px;height:340px;left:-40px;bottom:-50px}}
+@media(min-width:900px){.header-bg-spiral{width:400px;height:400px;left:-20px;bottom:-60px}}
+.header-pill{display:inline-flex;align-items:center;gap:.5rem;background:rgba(255,255,255,0.13);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,0.18);border-radius:50px;padding:.3rem 1rem .3rem .4rem;margin-bottom:1.2rem}
+.header-pill img{width:28px;height:28px;border-radius:6px;object-fit:cover}
+.header-pill span{font-family:'Prompt',sans-serif;font-size:.72rem;font-weight:600;color:#fff;letter-spacing:.15em;text-transform:uppercase}
+h1{font-family:'Prompt',sans-serif;font-size:clamp(1.4rem,4vw,2.1rem);font-weight:600;color:#fff;line-height:1.3;position:relative;z-index:1}
+.subtitle{font-family:'Prompt',sans-serif;font-size:clamp(.85rem,2vw,1.05rem);color:rgba(255,255,255,0.85);margin-top:.4rem;font-weight:300;letter-spacing:.08em;position:relative;z-index:1}
+.tagline{font-size:.82rem;color:rgba(255,255,255,0.6);margin-top:.6rem;font-weight:300;position:relative;z-index:1}
+.stats-row{display:flex;justify-content:center;flex-wrap:wrap;gap:.7rem;margin-top:1.4rem;position:relative;z-index:1}
+.stat-card{display:flex;align-items:center;gap:.45rem;background:rgba(255,255,255,0.1);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,0.15);border-radius:50px;padding:.4rem 1rem;font-family:'Prompt',sans-serif;font-size:.82rem;color:#fff;font-weight:500}
+.stat-card .stat-icon{font-size:1rem}
+.stat-card .stat-num{font-weight:600}
+.map-btn{display:inline-flex;align-items:center;gap:.4rem;background:rgba(204,17,51,0.85);color:#fff;border:none;border-radius:50px;padding:.45rem 1.2rem;font-family:'Prompt',sans-serif;font-size:.82rem;font-weight:500;cursor:pointer;text-decoration:none;transition:background .2s}
+.map-btn:hover{background:rgba(204,17,51,1)}
 /* CONTROLS */
-.controls{background:#fff;border-bottom:1px solid var(--warm);padding:1rem 1.5rem;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.06)}
-.controls-inner{max-width:960px;margin:0 auto;display:flex;flex-wrap:wrap;gap:.75rem;align-items:center}
+.controls{background:#fff;border-bottom:1px solid var(--warm);padding:.9rem 1.5rem;position:sticky;top:0;z-index:100;box-shadow:0 2px 16px rgba(26,58,143,.08)}
+.controls-inner{max-width:960px;margin:0 auto;display:flex;flex-wrap:wrap;gap:.65rem;align-items:center}
 .search-wrap{position:relative;flex:1;min-width:200px}
-.search-wrap input{width:100%;padding:.6rem .75rem .6rem 2.4rem;border:1.5px solid var(--warm);border-radius:8px;font-family:'Sarabun',sans-serif;font-size:.9rem;background:var(--cream);color:var(--text);outline:none;transition:border-color .2s}
-.search-wrap input:focus{border-color:var(--indigo)}
-.search-icon{position:absolute;left:.7rem;top:50%;transform:translateY(-50%);color:var(--muted);font-size:1rem;pointer-events:none}
-select{padding:.6rem .9rem;border:1.5px solid var(--warm);border-radius:8px;font-family:'Sarabun',sans-serif;font-size:.85rem;background:var(--cream);color:var(--text);outline:none;cursor:pointer;transition:border-color .2s}
-select:focus{border-color:var(--indigo)}
-.count-badge{font-size:.8rem;color:var(--muted);white-space:nowrap;margin-left:auto}
+.search-wrap input{width:100%;padding:.6rem .75rem .6rem 2.4rem;border:1.5px solid var(--warm);border-radius:24px;font-family:'Sarabun',sans-serif;font-size:.88rem;background:#F8F9FF;color:var(--text);outline:none;transition:border-color .2s,box-shadow .2s}
+.search-wrap input:focus{border-color:var(--indigo);box-shadow:0 0 0 3px rgba(26,58,143,.1)}
+.search-icon{position:absolute;left:.75rem;top:50%;transform:translateY(-50%);color:var(--muted);font-size:.9rem;pointer-events:none}
+select{padding:.6rem .9rem;border:1.5px solid var(--warm);border-radius:24px;font-family:'Sarabun',sans-serif;font-size:.85rem;background:#F8F9FF;color:var(--text);outline:none;cursor:pointer;transition:border-color .2s,box-shadow .2s}
+select:focus{border-color:var(--indigo);box-shadow:0 0 0 3px rgba(26,58,143,.1)}
+.count-badge{font-size:.78rem;color:var(--muted);white-space:nowrap;margin-left:auto;background:var(--light);padding:.3rem .8rem;border-radius:20px;font-weight:500}
 /* GRID */
-.grid{max-width:960px;margin:1.5rem auto;padding:0 1.5rem 3rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem}
+.grid{max-width:960px;margin:1.5rem auto;padding:0 1.5rem 3rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1.1rem}
 /* CARD */
-.card{background:#fff;border-radius:12px;border:1px solid var(--warm);overflow:hidden;transition:transform .15s,box-shadow .15s;cursor:default}
-.card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(44,62,107,.1)}
-.card-top{height:6px;background:linear-gradient(90deg,var(--indigo),var(--teal))}
+.card{background:#fff;border-radius:18px;border:1.5px solid var(--warm);overflow:hidden;transition:transform .18s,box-shadow .18s;cursor:default}
+.card:hover{transform:translateY(-3px);box-shadow:0 10px 32px rgba(26,58,143,.13)}
+.card-top{height:5px;background:linear-gradient(90deg,var(--indigo),var(--teal))}
 .card-top.c-C01{background:linear-gradient(90deg,#5B4FCF,#8B6FDF)}
 .card-top.c-C02{background:linear-gradient(90deg,#B5613A,#D4825A)}
 .card-top.c-C03{background:linear-gradient(90deg,#1E6B5A,#2E9B7A)}
@@ -51,20 +63,30 @@ select:focus{border-color:var(--indigo)}
 .card-top.c-C09{background:linear-gradient(90deg,#2A7AAA,#3A9ACA)}
 .card-top.c-C10{background:linear-gradient(90deg,#6A8A4A,#8AAA6A)}
 .card-top.c-C11{background:linear-gradient(90deg,#7A7A8A,#9A9AAA)}
-.card-body{padding:1rem 1rem .85rem}
-.card-name{font-family:'Prompt',sans-serif;font-size:.95rem;font-weight:500;line-height:1.3;color:var(--indigo)}
+.card-body{padding:1rem 1rem .9rem}
+.card-name{font-family:'Prompt',sans-serif;font-size:.95rem;font-weight:500;line-height:1.35;color:var(--indigo)}
 .card-name-en{font-size:.78rem;color:var(--muted);margin-top:.15rem}
 .card-tags{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.7rem}
-.tag{display:inline-flex;align-items:center;gap:.3rem;font-size:.72rem;padding:.2rem .55rem;border-radius:20px;font-weight:500}
+.tag{display:inline-flex;align-items:center;gap:.3rem;font-size:.72rem;padding:.22rem .6rem;border-radius:20px;font-weight:500}
 .tag-prov{background:var(--light);color:var(--indigo)}
-.tag-cat{background:#EEF2F9;color:var(--teal)}
-.card-map{display:block;margin-top:.8rem;font-size:.78rem;color:var(--terracotta);text-decoration:none;display:flex;align-items:center;gap:.3rem;font-weight:500}
+.tag-cat{background:#EEF2FF;color:var(--teal)}
+.card-map{display:flex;margin-top:.8rem;font-size:.78rem;color:var(--terracotta);text-decoration:none;align-items:center;gap:.3rem;font-weight:500}
 .card-map:hover{color:var(--indigo)}
+.card-contacts{display:flex;flex-direction:column;gap:.35rem;margin-top:.7rem}
+.card-contact{display:flex;align-items:center;gap:.35rem;font-size:.78rem;color:var(--muted);text-decoration:none}
+.card-contact:hover{color:var(--indigo)}
+a.card-contact{color:var(--terracotta)}
+a.card-contact:hover{color:var(--indigo)}
 /* EMPTY */
 .empty{grid-column:1/-1;text-align:center;padding:4rem 1rem;color:var(--muted)}
 .empty-icon{font-size:2.5rem;margin-bottom:.5rem}
 /* FOOTER */
-footer{text-align:center;padding:1.5rem;font-size:.75rem;color:var(--muted);border-top:1px solid var(--warm)}
+footer{text-align:center;padding:2rem 1.5rem;font-size:.75rem;color:var(--muted);border-top:1px solid var(--warm);background:linear-gradient(180deg,#fff 0%,#F5F7FF 100%);position:relative;overflow:hidden}
+.footer-spiral{position:absolute;right:-30px;top:50%;transform:translateY(-50%);width:100px;height:100px;object-fit:contain;opacity:.08;pointer-events:none}
+.footer-spiral-left{position:absolute;left:-30px;top:50%;transform:translateY(-50%);width:100px;height:100px;object-fit:contain;opacity:.08;pointer-events:none}
+@media(min-width:600px){.footer-spiral,.footer-spiral-left{width:130px;height:130px}}
+@media(min-width:900px){.footer-spiral,.footer-spiral-left{width:160px;height:160px}}
+.footer-brand{font-family:'Prompt',sans-serif;font-size:.88rem;font-weight:500;color:var(--indigo);margin-bottom:.4rem}
 @media(max-width:520px){
   .controls-inner{flex-direction:column;align-items:stretch}
   select{width:100%}
@@ -75,17 +97,18 @@ footer{text-align:center;padding:1.5rem;font-size:.75rem;color:var(--muted);bord
 <body>
 
 <header>
+  <img class="header-bg-logo" src="koyori-logo.jpg" alt="">
+  <img class="header-bg-spiral" src="koyori-spiral.png" alt="">
   <div class="header-inner">
-    <div class="logo-row">
-      <div class="logo-dot"></div>
-      <span style="font-size:.75rem;color:rgba(255,255,255,0.5);letter-spacing:.1em;text-transform:uppercase">Koyori</span>
-    </div>
-    <h1>ทำเนียบช่างฝีมือ<br>Artisan Directory</h1>
-    <p class="subtitle">หัตถศิลป์ล้านนา · Northern Thai Crafts 2019–2025</p>
+    <div class="header-pill"><img src="koyori-logo.jpg" alt=""><span>Koyori Project</span></div>
+    <h1>ครูช่างในโครงการโคโยริ</h1>
+    <div class="subtitle">Koyori Artisan Directory</div>
+    <div class="tagline">หัตถศิลป์ล้านนา · Northern Thai Crafts 2019–2025</div>
     <div class="stats-row">
-      <div class="stat"><strong>197</strong>ช่างฝีมือ / artisans</div>
-      <div class="stat"><strong>9</strong>จังหวัด / provinces</div>
-      <div class="stat"><strong>11</strong>หมวดหมู่ / categories</div>
+      <div class="stat-card"><span class="stat-icon">👩‍🎨</span> <span class="stat-num" id="statArtisans">197</span> ช่าง</div>
+      <div class="stat-card"><span class="stat-icon">📍</span> <span class="stat-num" id="statProvinces">9</span> จังหวัด</div>
+      <div class="stat-card"><span class="stat-icon">🎨</span> <span class="stat-num" id="statCategories">11</span> หมวด</div>
+      <a class="map-btn" href="map.html">🗺️ ดูแผนที่</a>
     </div>
   </div>
 </header>
@@ -112,7 +135,10 @@ footer{text-align:center;padding:1.5rem;font-size:.75rem;color:var(--muted);bord
 <div class="grid" id="grid"></div>
 
 <footer>
-  Koyori Artisan Directory &nbsp;·&nbsp; ข้อมูลช่างฝีมือภาคเหนือ 2019–2025
+  <img class="footer-spiral-left" src="koyori-spiral.png" alt="">
+  <img class="footer-spiral" src="koyori-spiral.png" alt="">
+  <div class="footer-brand">Koyori Project · โครงการโคโยริ</div>
+  ข้อมูลครูช่างฝีมือภาคเหนือ 2019–2025 &nbsp;·&nbsp; Koyori Artisan Directory
 </footer>
 
 <script>
@@ -164,7 +190,10 @@ function renderCards(list){
           <span class="tag" style="background:var(--light);color:var(--muted)">${a.year}</span>
         </div>
         ${a.map?`<a class="card-map" href="${escHtml(a.map)}" target="_blank" rel="noopener">🗺️ ดูแผนที่ · View Map</a>`:''}
-      </div>
+        ${(a.phone||a.fb)?`<div class="card-contacts">
+          ${a.phone?`<a class="card-contact" href="tel:${escHtml(a.phone)}">📞 ${escHtml(a.phone)}</a>`:''}
+          ${a.fb?`<a class="card-contact" href="${a.fb.startsWith('http')?escHtml(a.fb):'https://www.facebook.com/'+escHtml(a.fb)}" target="_blank" rel="noopener">📘 Facebook</a>`:''}
+        </div>`:''}      </div>
     </div>
   `).join('');
 }
