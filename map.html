@@ -1,0 +1,1420 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Koyori — แผนที่ครูช่าง</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Thai:wght@400;600;700&family=Sarabun:wght@300;400;500;600&family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --red:#C0392B;--red2:#E74C3C;--navy:#1A2A5E;--navy2:#2541A8;
+  --white:#fff;--offwhite:#F8F9FF;--light:#EEF1FB;
+  --text:#1A1A2E;--muted:#6B7394;--border:#D8DCF0;
+}
+body,html{height:100%;font-family:'Sarabun',sans-serif;background:var(--offwhite)}
+
+/* HEADER */
+header{background:var(--navy);position:relative}
+.hero-stripe{background:var(--red);height:5px;width:100%}
+.header-inner{
+  max-width:none;padding:.7rem 1.5rem;
+  display:flex;align-items:center;gap:1rem;flex-wrap:wrap;
+}
+.header-logo{
+  width:38px;height:38px;object-fit:contain;
+  filter:drop-shadow(0 1px 4px rgba(0,0,0,.3));
+}
+.header-logo-fallback{
+  width:38px;height:38px;border-radius:50%;
+  background:linear-gradient(135deg,var(--red),var(--navy2));
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Montserrat',sans-serif;font-weight:700;font-size:.8rem;color:#fff;
+}
+.header-title{
+  font-family:'Noto Serif Thai',serif;font-weight:700;
+  font-size:1rem;color:#fff;line-height:1.2;
+}
+.header-sub{font-size:.72rem;color:rgba(255,255,255,0.55)}
+.nav-links{display:flex;gap:.4rem;margin-left:auto;flex-wrap:wrap}
+.nav-btn{
+  display:inline-flex;align-items:center;gap:.3rem;
+  padding:.35rem .8rem;border-radius:6px;font-size:.75rem;
+  text-decoration:none;font-family:'Montserrat',sans-serif;font-weight:600;
+  transition:all .2s;
+}
+.nav-btn-active{background:var(--red);color:#fff}
+.nav-btn-ghost{color:rgba(255,255,255,.7);background:transparent}
+.nav-btn-ghost:hover{background:rgba(255,255,255,.12);color:#fff}
+
+/* MAP */
+#map{position:fixed;top:0;left:0;right:0;bottom:0;z-index:0}
+header{position:relative;z-index:500}
+
+/* POPUP */
+.leaflet-popup-content-wrapper{
+  border-radius:12px;border-top:5px solid var(--red);
+  box-shadow:0 8px 30px rgba(26,42,94,.2);
+  font-family:'Sarabun',sans-serif;padding:0;overflow:hidden;
+}
+.leaflet-popup-content{width:300px!important;margin:0;font-size:14px}
+.popup-header{
+  background:var(--navy);color:#fff;
+  padding:.65rem 1rem;
+}
+.popup-prov{
+  font-family:'Montserrat',sans-serif;font-weight:700;
+  font-size:.85rem;letter-spacing:.02em;
+}
+.popup-count{
+  font-size:.68rem;color:rgba(255,255,255,.6);
+  margin-top:.1rem;
+}
+.popup-body{padding:.6rem .8rem .8rem;max-height:320px;overflow-y:auto}
+.artisan-item{
+  padding:.55rem 0;border-bottom:1px dashed var(--border);
+}
+.artisan-item:last-child{border:none}
+.artisan-name{
+  font-family:'Noto Serif Thai',serif;font-weight:600;
+  color:var(--navy);font-size:.88rem;display:block;
+}
+.artisan-en{color:var(--muted);font-size:.7rem;display:block;margin-bottom:.2rem}
+.artisan-cat{
+  background:#FEF3F2;color:var(--red);
+  padding:.12rem .45rem;border-radius:20px;
+  font-size:.65rem;display:inline-block;margin-bottom:.3rem;font-weight:600;
+}
+.artisan-links{display:flex;gap:.35rem;flex-wrap:wrap;margin-top:.3rem}
+.artisan-link{
+  color:var(--navy2);text-decoration:none;font-size:.68rem;
+  display:inline-flex;align-items:center;gap:.25rem;font-weight:500;
+  padding:.12rem .4rem;background:var(--light);border-radius:4px;
+  transition:all .15s;
+}
+.artisan-link:hover{background:var(--navy2);color:#fff}
+.artisan-link.fb{background:#FEF3F2;color:var(--red)}
+.artisan-link.fb:hover{background:var(--red);color:#fff}
+
+/* LEGEND */
+.legend{
+  position:fixed;bottom:1.5rem;left:1rem;z-index:500;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(8px);
+  border-radius:10px;padding:.8rem 1rem;
+  box-shadow:0 4px 20px rgba(26,42,94,.15);
+  border:1px solid var(--border);
+  font-size:.75rem;color:var(--text);min-width:140px;
+}
+.legend-title{
+  font-family:'Montserrat',sans-serif;font-weight:700;
+  color:var(--navy);margin-bottom:.5rem;font-size:.78rem;
+  display:flex;align-items:center;gap:.35rem;
+}
+.legend-row{display:flex;align-items:center;gap:.5rem;margin-bottom:.25rem}
+.legend-dot{
+  border-radius:50%;background:var(--navy);
+  border:2px solid var(--red);flex-shrink:0;opacity:.85;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hero-stripe"></div>
+  <div class="header-inner">
+    <img src="koyori-logo.jpg" alt="Koyori" class="header-logo"
+         onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+    <div class="header-logo-fallback" style="display:none">K</div>
+    <div>
+      <div class="header-title">แผนที่ครูช่างหัตถศิลป์ล้านนา</div>
+      <div class="header-sub">Koyori Artisan Map · Northern Thailand</div>
+    </div>
+    <div class="nav-links">
+      <a href="index.html" class="nav-btn nav-btn-ghost">🗂️ Directory</a>
+      <a href="map.html"   class="nav-btn nav-btn-active">🗺️ Map</a>
+    </div>
+  </div>
+</header>
+
+<div id="map"></div>
+
+<div class="legend">
+  <div class="legend-title">⬤ จำนวนช่าง</div>
+  <div class="legend-row">
+    <div class="legend-dot" style="width:28px;height:28px"></div>
+    <span>&gt;25 คน</span>
+  </div>
+  <div class="legend-row">
+    <div class="legend-dot" style="width:18px;height:18px"></div>
+    <span>&le;25 คน</span>
+  </div>
+  <div class="legend-row">
+    <div class="legend-dot" style="width:10px;height:10px"></div>
+    <span>&lt;10 คน</span>
+  </div>
+</div>
+
+<script>
+var map = L.map('map',{zoomControl:true}).setView([18.8, 99.0], 8);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+  attribution:'© <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
+  maxZoom:18
+}).addTo(map);
+
+var provinceData = [
+    {
+        "province": "ตาก (Tak)",
+        "lat": 16.884,
+        "lng": 99.1258,
+        "count": 2,
+        "artisans": [
+            {
+                "nameTh": "นางสมหมาย เพ็งอำไพ",
+                "nameEn": "Sommai Pangampai",
+                "category": "งานจักสาน",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B9%80%E0%B8%A5%E0%B8%82%E0%B8%97%E0%B8%B5%E0%B9%88%209/3%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%206%20%E0%B8%95.%E0%B8%95%E0%B8%A5%E0%B8%B8%E0%B8%81%E0%B8%81%E0%B8%A5%E0%B8%B2%E0%B8%87%E0%B8%97%E0%B8%B8%E0%B9%88%E0%B8%87%20%E0%B8%AD.%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%20%E0%B8%88.%E0%B8%95%E0%B8%B2%E0%B8%81%2063000"
+            },
+            {
+                "nameTh": "นายประสงค์ นินบุรี",
+                "nameEn": "Prasong Ninburee",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B9%80%E0%B8%A5%E0%B8%82%E0%B8%97%E0%B8%B5%E0%B9%88%20127%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%205%20%E0%B8%95.%E0%B8%95%E0%B8%B2%E0%B8%81%E0%B8%AD%E0%B8%AD%E0%B8%81%20%E0%B8%AD.%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B8%95%E0%B8%B2%E0%B8%81%20%E0%B8%88.%E0%B8%95%E0%B8%B2%E0%B8%81%2063120"
+            }
+        ]
+    },
+    {
+        "province": "น่าน (Nan)",
+        "lat": 18.7756,
+        "lng": 100.773,
+        "count": 11,
+        "artisans": [
+            {
+                "nameTh": "แพว เนตรทิพย์",
+                "nameEn": "Phaeo Netthep",
+                "category": "งานผ้าและสิ่งทอ",
+                "link": "https://www.google.com/maps/search/?api=1&query=141%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%E0%B8%97%E0%B8%B5%E0%B9%88%201%20%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B9%80%E0%B8%AE%E0%B8%B5%E0%B9%89%E0%B8%A2%20%E0%B8%95%E0%B8%B3%E0%B8%9A%E0%B8%A5%E0%B8%A8%E0%B8%B4%E0%B8%A5%E0%B8%B2%E0%B9%81%E0%B8%A5%E0%B8%87%20%E0%B8%AD%E0%B8%B3%E0%B9%80%E0%B8%A0%E0%B8%AD%E0%B8%9B%E0%B8%B1%E0%B8%A7%20%E0%B8%88%E0%B8%B1%E0%B8%87%E0%B8%AB%E0%B8%A7%E0%B8%B1%E0%B8%94%E0%B8%99%E0%B9%88%E0%B8%B2%E0%B8%99%2055120"
+            },
+            {
+                "nameTh": "ศุภมาศ วงศ์ไทย",
+                "nameEn": "Suphamat Wongthai",
+                "category": "งานผ้าและสิ่งทอ",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B8%81%E0%B8%A5%E0%B8%B8%E0%B9%88%E0%B8%A1%E0%B8%97%E0%B8%AD%E0%B8%9C%E0%B9%89%E0%B8%B2%E0%B9%84%E0%B8%97%E0%B8%A5%E0%B8%B7%E0%B9%89%E0%B8%AD%E0%B8%AA%E0%B8%B5%E0%B8%98%E0%B8%A3%E0%B8%A3%E0%B8%A1%E0%B8%8A%E0%B8%B2%E0%B8%95%E0%B8%B4%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B8%94%E0%B8%AD%E0%B8%99%E0%B8%A1%E0%B8%B9%E0%B8%A5%20%28%E0%B9%84%E0%B8%97%E0%B8%A1%E0%B8%B9%E0%B8%A5%29%2062%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%E0%B8%97%E0%B8%B5%E0%B9%88%202%20%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B8%94%E0%B8%AD%E0%B8%99%E0%B8%A1%E0%B8%B9%E0%B8%A5%20%E0%B8%95%E0%B8%B3%E0%B8%9A%E0%B8%A5%E0%B8%A8%E0%B8%A3%E0%B8%B5%E0%B8%A0%E0%B8%B9%E0%B8%A1%E0%B8%B4%20%E0%B8%AD%E0%B8%B3%E0%B9%80%E0%B8%A0%E0%B8%AD%E0%B8%97%E0%B9%88%E0%B8%B2%E0%B8%A7%E0%B8%B1%E0%B8%87%E0%B8%9C%E0%B8%B2%20%E0%B8%88%E0%B8%B1%E0%B8%87%E0%B8%AB%E0%B8%A7%E0%B8%B1%E0%B8%94%E0%B8%99%E0%B9%88%E0%B8%B2%E0%B8%99%2055140"
+            },
+            {
+                "nameTh": "นายกรกฎ แปงใจ",
+                "nameEn": "Mr. Korrakod Paengjai",
+                "category": "งานผ้าและสิ่งทอ",
+                "link": "https://www.google.com/maps/search/?api=1&query=166%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%E0%B8%97%E0%B8%B5%E0%B9%88%205%20%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B8%8B%E0%B8%B2%E0%B8%A7%E0%B8%AB%E0%B8%A5%E0%B8%A7%E0%B8%87%20%E0%B8%95.%E0%B8%9A%E0%B9%88%E0%B8%AD%E0%B8%AA%E0%B8%A7%E0%B8%81%20%E0%B8%AD.%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%E0%B8%99%E0%B9%88%E0%B8%B2%E0%B8%99%20%E0%B8%88.%E0%B8%99%E0%B9%88%E0%B8%B2%E0%B8%99%2055000"
+            },
+            {
+                "nameTh": "นางสาวจุฬาลักษณ์ ทิวกระโทก",
+                "nameEn": "Miss Julaluck Thiewkrathoke",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=151%20%E0%B8%A1.2%20%E0%B8%95.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%81%E0%B8%A5%E0%B8%B2%E0%B8%87%20%E0%B8%AD.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%81%E0%B8%A5%E0%B8%B2%E0%B8%87%20%E0%B8%88.%E0%B8%99%E0%B9%88%E0%B8%B2%E0%B8%99%2055160"
+            },
+            {
+                "nameTh": "นางชนิกา โสดานาฎ",
+                "nameEn": "Mrs. Chanika Sodanad",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B9%80%E0%B8%A5%E0%B8%82%E0%B8%97%E0%B8%B5%E0%B9%88%208%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%E0%B8%97%E0%B8%B5%E0%B9%88%203%20%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B8%AB%E0%B8%A5%E0%B9%88%E0%B8%B2%E0%B8%A2%E0%B8%97%E0%B8%B8%E0%B9%88%E0%B8%87%20%E0%B8%95.%E0%B8%9B%E0%B8%AD%E0%B8%99%20%E0%B8%AD.%E0%B8%97%E0%B8%B8%E0%B9%88%E0%B8%87%E0%B8%8A%E0%B9%89%E0%B8%B2%E0%B8%87%20%E0%B8%88.%E0%B8%99%E0%B9%88%E0%B8%B2%E0%B8%99%2055130"
+            },
+            {
+                "nameTh": "ดนิตา สุภพัฒน์บงกช",
+                "nameEn": "Danita Suphatbongkot",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=381%20%E0%B8%A1.5%20%E0%B8%95.%E0%B8%9C%E0%B8%B2%E0%B8%AA%E0%B8%B4%E0%B8%87%E0%B8%AB%E0%B9%8C%20%E0%B8%AD.%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%20%E0%B8%88.%E0%B8%99%E0%B9%88%E0%B8%B2%E0%B8%99%2055000"
+            },
+            {
+                "nameTh": "กมลพร เนตรทิพย์",
+                "nameEn": "Kamonporn Netthip",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=109%20%E0%B8%A1.7%20%E0%B8%95.%E0%B8%A7%E0%B8%A3%E0%B8%99%E0%B8%84%E0%B8%A3%20%E0%B8%AD.%E0%B8%9B%E0%B8%B1%E0%B8%A7%20%E0%B8%88.%E0%B8%99%E0%B9%88%E0%B8%B2%E0%B8%99%2055120"
+            },
+            {
+                "nameTh": "อนุรักษ์ ศรีประเสริฐ",
+                "nameEn": "Anurak Sriprasert",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=2%20%E0%B8%A1.13%20%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B8%94%E0%B8%AD%E0%B8%99%E0%B8%A1%E0%B8%B9%E0%B8%A5%E0%B8%9E%E0%B8%B1%E0%B8%92%E0%B8%99%E0%B8%B2%20%E0%B8%95.%E0%B8%94%E0%B8%B9%E0%B9%88%E0%B9%83%E0%B8%95%E0%B9%89%20%E0%B8%AD.%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%20%E0%B8%88.%E0%B8%99%E0%B9%88%E0%B8%B2%E0%B8%99%2055000"
+            },
+            {
+                "nameTh": "นิกร พลังฤทธิ์",
+                "nameEn": "Nikorn Palangrith",
+                "category": "งานผ้าและสิ่งทอ",
+                "link": "https://www.google.com/maps/search/?api=1&query=7/3%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%E0%B8%97%E0%B8%B5%E0%B9%88%203%20%E0%B8%95.%E0%B8%AD%E0%B9%88%E0%B8%B2%E0%B8%A2%E0%B8%99%E0%B8%B2%E0%B9%84%E0%B8%A5%E0%B8%A2%20%E0%B8%AD.%E0%B9%80%E0%B8%A7%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%AA%E0%B8%B2%20%E0%B8%88.%E0%B8%99%E0%B9%88%E0%B8%B2%E0%B8%99%2055110"
+            },
+            {
+                "nameTh": "นางอรัญวา ชาวพนาไพร",
+                "nameEn": "Arunva Chaophanaphai",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B9%80%E0%B8%A5%E0%B8%82%E0%B8%97%E0%B8%B5%E0%B9%88%20118%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%201%20%E0%B8%95.%E0%B8%A0%E0%B8%B9%E0%B8%9F%E0%B9%89%E0%B8%B2%20%E0%B8%AD.%E0%B8%9A%E0%B9%88%E0%B8%AD%E0%B9%80%E0%B8%81%E0%B8%A5%E0%B8%B7%E0%B8%AD%20%E0%B8%88.%E0%B8%99%E0%B9%88%E0%B8%B2%E0%B8%99%2055220"
+            },
+            {
+                "nameTh": "นายไตรวิชร์ ตั้งมณีกาญจน์",
+                "nameEn": "Trivit Tangmaneekarn",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B9%80%E0%B8%A5%E0%B8%82%E0%B8%97%E0%B8%B5%E0%B9%88%20107%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%205%20%E0%B8%95.%E0%B8%A7%E0%B8%A3%E0%B8%99%E0%B8%84%E0%B8%A3%20%E0%B8%AD.%E0%B8%9B%E0%B8%B1%E0%B8%A7%20%E0%B8%88.%E0%B8%99%E0%B9%88%E0%B8%B2%E0%B8%99%2055120"
+            }
+        ]
+    },
+    {
+        "province": "พะเยา (Phayao)",
+        "lat": 19.1666,
+        "lng": 99.9022,
+        "count": 20,
+        "artisans": [
+            {
+                "nameTh": "ถนอมศรี สุถาลา",
+                "nameEn": "Tanomsri Suthala",
+                "category": "งานจักสาน",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B8%81%E0%B8%A5%E0%B8%B8%E0%B9%88%E0%B8%A1%E0%B8%AA%E0%B8%95%E0%B8%A3%E0%B8%B5%E0%B8%AA%E0%B8%AB%E0%B8%81%E0%B8%A3%E0%B8%93%E0%B9%8C%E0%B8%9C%E0%B8%A5%E0%B8%B4%E0%B8%95%E0%B8%A0%E0%B8%B1%E0%B8%93%E0%B8%91%E0%B9%8C%E0%B8%AB%E0%B8%8D%E0%B9%89%E0%B8%B2%E0%B9%81%E0%B8%9D%E0%B8%81%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B8%81%E0%B9%8A%E0%B8%AD%E0%B8%8B%E0%B8%B2%E0%B8%A7%20153%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%E0%B8%97%E0%B8%B5%E0%B9%88%2011%20%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B8%81%E0%B9%8A%E0%B8%AD%E0%B8%8B%E0%B8%B2%E0%B8%A7%20%E0%B8%95%E0%B8%B3%E0%B8%9A%E0%B8%A5%E0%B8%97%E0%B8%B8%E0%B9%88%E0%B8%87%E0%B8%81%E0%B8%A5%E0%B9%89%E0%B8%A7%E0%B8%A2%20%E0%B8%AD%E0%B8%B3%E0%B9%80%E0%B8%A0%E0%B8%AD%E0%B8%A0%E0%B8%B9%E0%B8%8B%E0%B8%B2%E0%B8%87%20%E0%B8%88%E0%B8%B1%E0%B8%87%E0%B8%AB%E0%B8%A7%E0%B8%B1%E0%B8%94%E0%B8%9E%E0%B8%B0%E0%B9%80%E0%B8%A2%E0%B8%B2%2056110"
+            },
+            {
+                "nameTh": "นายอุเทน รินฟอง",
+                "nameEn": "Mr. Uthen Rinfong",
+                "category": "เครื่องปั้นดินเผาและเซรามิก",
+                "link": "https://www.google.com/maps/search/?api=1&query=66%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%2010%20%E0%B8%95.%E0%B9%81%E0%B8%A1%E0%B9%88%E0%B8%9B%E0%B8%B7%E0%B8%A1%20%E0%B8%AD.%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%20%E0%B8%88.%E0%B8%9E%E0%B8%B0%E0%B9%80%E0%B8%A2%E0%B8%B2%2056000"
+            },
+            {
+                "nameTh": "รุ่งนที คำเรืองฤทธิ์",
+                "nameEn": "Mr. Rungnatee Khamruangrit",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=179%20%E0%B8%A1.5%20%E0%B8%95.%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B8%95%E0%B9%89%E0%B8%B3%20%E0%B8%AD.%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%20%E0%B8%88.%E0%B8%9E%E0%B8%B0%E0%B9%80%E0%B8%A2%E0%B8%B2%2056000"
+            },
+            {
+                "nameTh": "นายศุภรดา กันทะวงค์",
+                "nameEn": "Mr. Suparada Kantawong",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=118%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%203%20%E0%B8%95.%E0%B8%AA%E0%B8%B1%E0%B8%99%E0%B8%9B%E0%B9%88%E0%B8%B2%E0%B8%A1%E0%B9%88%E0%B8%A7%E0%B8%87%20%E0%B8%AD.%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%20%E0%B8%88.%E0%B8%9E%E0%B8%B0%E0%B9%80%E0%B8%A2%E0%B8%B2%2056000"
+            },
+            {
+                "nameTh": "ศิระยุสม์ ศยามเศรณี",
+                "nameEn": "Sirayut Siamseranee",
+                "category": "เครื่องปั้นดินเผาและเซรามิก",
+                "link": "https://www.google.com/maps/search/?api=1&query=26/1%20%E0%B8%A3%E0%B8%B2%E0%B8%8A%E0%B8%A7%E0%B8%87%E0%B8%A8%E0%B9%8C%20%E0%B8%8B.2%20%E0%B8%95.%E0%B9%80%E0%B8%A7%E0%B8%B5%E0%B8%A2%E0%B8%87%20%E0%B8%AD.%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%20%E0%B8%88.%E0%B8%9E%E0%B8%B0%E0%B9%80%E0%B8%A2%E0%B8%B2%2056000"
+            },
+            {
+                "nameTh": "ฐิติรัตน์ อัศวไกรสี",
+                "nameEn": "Address 92 moo.1, Pa Chang Noi, Pong, Phayao,56140",
+                "category": "งานผ้าและสิ่งทอ",
+                "link": "https://www.google.com/maps/search/?api=1&query=92%20%E0%B8%A1.1%20%E0%B8%95.%E0%B8%9C%E0%B8%B2%E0%B8%8A%E0%B9%89%E0%B8%B2%E0%B8%87%E0%B8%99%E0%B9%89%E0%B8%AD%E0%B8%A2%20%E0%B8%AD.%E0%B8%9B%E0%B8%87%20%E0%B8%88.%E0%B8%9E%E0%B8%B0%E0%B9%80%E0%B8%A2%E0%B8%B2%2056140"
+            },
+            {
+                "nameTh": "คงฤทธิ์ เชื้อสะอาด",
+                "nameEn": "Khongrit Chuasa-ard",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=186%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%E0%B8%97%E0%B8%B5%E0%B9%88%203%20%E0%B8%95%E0%B8%B3%E0%B8%9A%E0%B8%A5%E0%B8%AB%E0%B8%A2%E0%B9%88%E0%B8%A7%E0%B8%99%20%E0%B8%AD%E0%B8%B3%E0%B9%80%E0%B8%A0%E0%B8%AD%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%84%E0%B8%B3%20%E0%B8%88%E0%B8%B1%E0%B8%87%E0%B8%AB%E0%B8%A7%E0%B8%B1%E0%B8%94%E0%B8%9E%E0%B8%B0%E0%B9%80%E0%B8%A2%E0%B8%B2%2056110"
+            },
+            {
+                "nameTh": "เข็มทอง ค้ำจุน",
+                "nameEn": "Khemthong Chunjun",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B8%A1.6%20%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B9%81%E0%B8%81%E0%B9%83%E0%B8%AB%E0%B8%A1%E0%B9%88%20%E0%B8%95.%E0%B8%9B%E0%B9%88%E0%B8%B2%E0%B8%AA%E0%B8%B1%E0%B8%81%20%E0%B8%AD.%E0%B8%A0%E0%B8%B9%E0%B8%8B%E0%B8%B2%E0%B8%87%20%E0%B8%88.%E0%B8%9E%E0%B8%B0%E0%B9%80%E0%B8%A2%E0%B8%B2%2056110"
+            },
+            {
+                "nameTh": "รพีภรณ์ น้ำสา",
+                "nameEn": "Rapeeporn Namsa",
+                "category": "งานผ้าและสิ่งทอ",
+                "link": "https://www.google.com/maps/search/?api=1&query=34%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%886%20%E0%B8%95.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%A1%E0%B9%88%E0%B8%A7%E0%B8%99%20%E0%B8%AD.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%A1%E0%B9%88%E0%B8%A7%E0%B8%99%20%E0%B8%88.%E0%B8%9E%E0%B8%B0%E0%B9%80%E0%B8%A2%E0%B8%B2%2056160"
+            },
+            {
+                "nameTh": "บุปผา คนสนิท",
+                "nameEn": "Buppa Konsanit",
+                "category": "งานผ้าและสิ่งทอ",
+                "link": "https://www.google.com/maps/search/?api=1&query=111%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%205%20%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B9%83%E0%B8%AB%E0%B8%A1%E0%B9%88%E0%B8%A3%E0%B8%B2%E0%B8%A9%E0%B8%8E%E0%B8%A3%E0%B9%8C%E0%B8%9A%E0%B8%B3%E0%B8%A3%E0%B8%B8%E0%B8%87%20%E0%B8%95.%E0%B8%AA%E0%B8%B1%E0%B8%99%E0%B9%82%E0%B8%84%E0%B9%89%E0%B8%87%20%E0%B8%AD.%E0%B8%94%E0%B8%AD%E0%B8%81%E0%B8%84%E0%B8%B3%E0%B9%83%E0%B8%95%E0%B9%89%20%E0%B8%88.%E0%B8%9E%E0%B8%B0%E0%B9%80%E0%B8%A2%E0%B8%B2%2056120"
+            },
+            {
+                "nameTh": "เพ็ญศรี ชื่นวงศ์",
+                "nameEn": "Pensri Chuenwong",
+                "category": "งานผ้าและสิ่งทอ",
+                "link": "https://www.google.com/maps/search/?api=1&query=105/1%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%208%20%E0%B8%95.%E0%B8%AD%E0%B9%88%E0%B8%B2%E0%B8%87%E0%B8%97%E0%B8%AD%E0%B8%87%20%E0%B8%AD.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%84%E0%B8%B3%20%E0%B8%88.%E0%B8%9E%E0%B8%B0%E0%B9%80%E0%B8%A2%E0%B8%B2%2056150"
+            },
+            {
+                "nameTh": "จิรัฐิติอร โคแล็ง",
+                "nameEn": "Chiratthiti-on Collin",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=167%20%E0%B8%8B%E0%B8%AD%E0%B8%A21%20%E0%B8%A1.%2010%20%E0%B8%95.%20%E0%B8%AB%E0%B8%A2%E0%B9%88%E0%B8%A7%E0%B8%99%20%E0%B8%AD.%20%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%84%E0%B8%B3%20%E0%B8%88.%20%E0%B8%9E%E0%B8%B0%E0%B9%80%E0%B8%A2%E0%B8%B2"
+            },
+            {
+                "nameTh": "สุขสันต์ ศิริวงศ์",
+                "nameEn": "Suksun Siriwong",
+                "category": "เครื่องปั้นดินเผาและเซรามิก",
+                "link": "https://www.google.com/maps/search/?api=1&query=128%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%203%20%E0%B8%95.%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B9%80%E0%B8%AB%E0%B8%A5%E0%B9%88%E0%B8%B2%20%E0%B8%AD.%E0%B9%81%E0%B8%A1%E0%B9%88%E0%B9%83%E0%B8%88%20%E0%B8%88.%E0%B8%9E%E0%B8%B0%E0%B9%80%E0%B8%A2%E0%B8%B2%2056130"
+            },
+            {
+                "nameTh": "กัญญ์ชพร มะโนใจ",
+                "nameEn": "Kanchaporn Manojai",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B9%80%E0%B8%A5%E0%B8%82%E0%B8%97%E0%B8%B5%E0%B9%88%2010%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%203%20%E0%B8%95.%E0%B8%A8%E0%B8%A3%E0%B8%B5%E0%B8%96%E0%B9%89%E0%B8%AD%E0%B8%A2%20%E0%B8%AD.%E0%B9%81%E0%B8%A1%E0%B9%88%E0%B9%83%E0%B8%88%20%E0%B8%88.%E0%B8%9E%E0%B8%B0%E0%B9%80%E0%B8%A2%E0%B8%B2%2056130"
+            },
+            {
+                "nameTh": "วัชระ คำบุญเรือง",
+                "nameEn": "Watchara kumbunrueng",
+                "category": "งานผ้าและสิ่งทอ",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B9%80%E0%B8%A5%E0%B8%82%E0%B8%97%E0%B8%B5%E0%B9%88120%20%E0%B8%A1.5%20%E0%B8%95.%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B8%A1%E0%B8%B2%E0%B8%87%20%E0%B8%AD.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%A1%E0%B9%88%E0%B8%A7%E0%B8%99%20%E0%B8%88.%E0%B8%9E%E0%B8%B0%E0%B9%80%E0%B8%A2%E0%B8%B2%2056160"
+            },
+            {
+                "nameTh": "วนิดา แซ่ซ้ง",
+                "nameEn": "Wanida Saesong",
+                "category": "งานผ้าและสิ่งทอ",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B9%80%E0%B8%A5%E0%B8%82%E0%B8%97%E0%B8%B5%E0%B9%88%20239%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%207%20%E0%B8%95.%E0%B8%9C%E0%B8%B2%E0%B8%8A%E0%B9%89%E0%B8%B2%E0%B8%87%E0%B8%99%E0%B9%89%E0%B8%AD%E0%B8%A2%20%E0%B8%AD.%E0%B8%9B%E0%B8%87%20%E0%B8%88.%E0%B8%9E%E0%B8%B0%E0%B9%80%E0%B8%A2%E0%B8%B2%2056140"
+            },
+            {
+                "nameTh": "ทรงพร นิมิตดีเมธา",
+                "nameEn": "Songporn Nimitdeematha",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B9%80%E0%B8%A5%E0%B8%82%E0%B8%97%E0%B8%B5%E0%B9%88%20152%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%201%20%E0%B8%95.%E0%B8%9C%E0%B8%B2%E0%B8%8A%E0%B9%89%E0%B8%B2%E0%B8%87%E0%B8%99%E0%B9%89%E0%B8%AD%E0%B8%A2%20%E0%B8%AD.%E0%B8%9B%E0%B8%87%20%E0%B8%88.%E0%B8%9E%E0%B8%B0%E0%B9%80%E0%B8%A2%E0%B8%B2%2056140"
+            },
+            {
+                "nameTh": "นางวิภาพักตร์ อินพิรุดต์เดชาธร",
+                "nameEn": "Viphaphak Inpiruddechathorn",
+                "category": "งานจักสาน",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B9%80%E0%B8%A5%E0%B8%82%E0%B8%97%E0%B8%B5%E0%B9%88%2079%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%208%20%E0%B8%95.%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B8%AA%E0%B8%B2%E0%B8%87%20%E0%B8%AD.%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%20%E0%B8%88.%E0%B8%9E%E0%B8%B0%E0%B9%80%E0%B8%A2%E0%B8%B2%2056000"
+            },
+            {
+                "nameTh": "นางศรีแพร ตำหนักที่",
+                "nameEn": "Sriprae Thamanktee",
+                "category": "งานจักสาน",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B9%80%E0%B8%A5%E0%B8%82%E0%B8%97%E0%B8%B5%E0%B9%88%2091%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%205%20%E0%B8%95.%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B8%95%E0%B9%8A%E0%B8%B3%20%E0%B8%AD.%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%20%E0%B8%88.%E0%B8%9E%E0%B8%B0%E0%B9%80%E0%B8%A2%E0%B8%B2%2056000"
+            },
+            {
+                "nameTh": "นางสาวสายธาร คติปัญญา",
+                "nameEn": "Saitan katipanya",
+                "category": "งานผ้าและสิ่งทอ",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B9%80%E0%B8%A5%E0%B8%82%E0%B8%97%E0%B8%B5%E0%B9%88%20221%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%207%20%E0%B8%95.%E0%B8%9C%E0%B8%B2%E0%B8%8A%E0%B9%89%E0%B8%B2%E0%B8%87%E0%B8%99%E0%B9%89%E0%B8%AD%E0%B8%A2%20%E0%B8%AD.%E0%B8%9B%E0%B8%87%20%E0%B8%88.%E0%B8%9E%E0%B8%B0%E0%B9%80%E0%B8%A2%E0%B8%B2%2056140"
+            }
+        ]
+    },
+    {
+        "province": "ลำปาง (Lampang)",
+        "lat": 18.2888,
+        "lng": 99.492,
+        "count": 27,
+        "artisans": [
+            {
+                "nameTh": "สุทธิพร บุตรปะสะ",
+                "nameEn": "Sutthiphorn Butpasa",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=147%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%202%20%E0%B8%95%E0%B8%B3%E0%B8%9A%E0%B8%A5%E0%B9%81%E0%B8%88%E0%B9%89%E0%B8%8B%E0%B9%89%E0%B8%AD%E0%B8%99%20%E0%B8%AD%E0%B8%B3%E0%B9%80%E0%B8%A0%E0%B8%AD%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%E0%B8%9B%E0%B8%B2%E0%B8%99%20%E0%B8%88%E0%B8%B1%E0%B8%87%E0%B8%AB%E0%B8%A7%E0%B8%B1%E0%B8%94%E0%B8%A5%E0%B8%B3%E0%B8%9B%E0%B8%B2%E0%B8%87%2052240"
+            },
+            {
+                "nameTh": "อำไพ ทินชัย",
+                "nameEn": "Ampai Tinchai",
+                "category": "งานผ้าและสิ่งทอ",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%E0%B8%97%E0%B8%B5%E0%B9%88%202%20%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B8%99%E0%B9%89%E0%B8%B3%E0%B8%AB%E0%B8%A5%E0%B8%87%20%E0%B8%95%E0%B8%B3%E0%B8%9A%E0%B8%A5%E0%B8%AA%E0%B8%A1%E0%B8%B1%E0%B8%A2%20%E0%B8%AD%E0%B8%B3%E0%B9%80%E0%B8%A0%E0%B8%AD%E0%B8%AA%E0%B8%9A%E0%B8%9B%E0%B8%A3%E0%B8%B2%E0%B8%9A%20%E0%B8%88%E0%B8%B1%E0%B8%87%E0%B8%AB%E0%B8%A7%E0%B8%B1%E0%B8%94%E0%B8%A5%E0%B8%B3%E0%B8%9B%E0%B8%B2%E0%B8%87%2052170"
+            },
+            {
+                "nameTh": "ว่าที่ ร.ต. หญิง มาลี อินต๊ะสงค์",
+                "nameEn": "Malee Intasong",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B8%A8%E0%B8%B2%E0%B8%A5%E0%B8%B2%20S%20M%20L%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%201%20%E0%B8%95%E0%B8%B3%E0%B8%9A%E0%B8%A5%E0%B8%95%E0%B9%89%E0%B8%99%E0%B8%98%E0%B8%87%E0%B8%8A%E0%B8%B1%E0%B8%A2%20%E0%B8%AD%E0%B8%B3%E0%B9%80%E0%B8%A0%E0%B8%AD%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%20%E0%B8%88%E0%B8%B1%E0%B8%87%E0%B8%AB%E0%B8%A7%E0%B8%B1%E0%B8%94%E0%B8%A5%E0%B8%B3%E0%B8%9B%E0%B8%B2%E0%B8%87%2052000"
+            },
+            {
+                "nameTh": "นางรัตนาภรณ์​ จันทร์เรือน",
+                "nameEn": "Mrs. Rattaphon Janruen",
+                "category": "เครื่องปั้นดินเผาและเซรามิก",
+                "link": "https://www.google.com/maps/search/?api=1&query=80%E2%80%8B%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%E2%80%8B%2013%E2%80%8B%20%E0%B8%96.%E0%B8%A5%E0%B8%B3%E0%B8%9B%E0%B8%B2%E0%B8%87%E2%80%8B-%E0%B9%81%E0%B8%A1%E0%B9%88%E0%B8%97%E0%B8%B0%20%E2%80%8B%E0%B8%95.%E0%B8%8A%E0%B8%A1%E0%B8%9E%E0%B8%B9%20%E0%B8%AD.%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%20%E2%80%8B%E0%B8%88.%E0%B8%A5%E0%B8%B3%E0%B8%9B%E0%B8%B2%E0%B8%87%2052000"
+            },
+            {
+                "nameTh": "นางโสพิน หวานแหลม",
+                "nameEn": "Mrs. Sophin Wanlaem",
+                "category": "งานผ้าและสิ่งทอ",
+                "link": "https://www.google.com/maps/search/?api=1&query=111%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%205%20%E0%B8%95.%E0%B9%81%E0%B8%88%E0%B9%89%E0%B8%8B%E0%B9%89%E0%B8%AD%E0%B8%99%20%E0%B8%AD.%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%E0%B8%9B%E0%B8%B2%E0%B8%99%20%E0%B8%88.%E0%B8%A5%E0%B8%B3%E0%B8%9B%E0%B8%B2%E0%B8%87%2052240"
+            },
+            {
+                "nameTh": "มาหล่า สานสุทธิวงค์",
+                "nameEn": "Malha Sansuthiwong",
+                "category": "งานจักสาน",
+                "link": "https://www.google.com/maps/search/?api=1&query=24%20%E0%B8%A1.1%20%E0%B8%95.%E0%B9%81%E0%B8%88%E0%B9%89%E0%B8%8B%E0%B9%89%E0%B8%AD%E0%B8%99%20%E0%B8%AD.%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%E0%B8%9B%E0%B8%B2%E0%B8%99%20%E0%B8%88.%E0%B8%A5%E0%B8%B3%E0%B8%9B%E0%B8%B2%E0%B8%87%2052240"
+            },
+            {
+                "nameTh": "ชุติพนธ์ คำคะมูล",
+                "nameEn": "Chutipon Khamkamul",
+                "category": "เครื่องปั้นดินเผาและเซรามิก",
+                "link": "https://www.google.com/maps/search/?api=1&query=32/1%20%E0%B8%A1.8%20%E0%B8%95.%E0%B8%97%E0%B9%88%E0%B8%B2%E0%B8%9C%E0%B8%B2%20%E0%B8%AD.%E0%B9%80%E0%B8%81%E0%B8%B2%E0%B8%B0%E0%B8%84%E0%B8%B2%20%E0%B8%88.%E0%B8%A5%E0%B8%B3%E0%B8%9B%E0%B8%B2%E0%B8%87%2052130"
+            },
+            {
+                "nameTh": "จารุกิตติ์ แก้วโชติ",
+                "nameEn": "charukitti kaeochoti",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=210/2%20%E0%B8%A1.6%20%E0%B8%95.%E0%B8%AB%E0%B9%89%E0%B8%B2%E0%B8%87%E0%B8%89%E0%B8%B1%E0%B8%95%E0%B8%A3%20%E0%B8%AD.%E0%B8%AB%E0%B9%89%E0%B8%B2%E0%B8%87%E0%B8%89%E0%B8%B1%E0%B8%95%E0%B8%A3%20%E0%B8%88.%E0%B8%A5%E0%B8%B3%E0%B8%9B%E0%B8%B2%E0%B8%87"
+            },
+            {
+                "nameTh": "กานดา สุภาแสน",
+                "nameEn": "Kanda Supasaen",
+                "category": "งานผ้าและสิ่งทอ",
+                "link": "https://www.google.com/maps/search/?api=1&query=374%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%884%20%E0%B8%95.%E0%B8%95%E0%B9%89%E0%B8%99%E0%B8%98%E0%B8%87%E0%B8%8A%E0%B8%B1%E0%B8%A2%20%E0%B8%AD.%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%20%E0%B8%88.%E0%B8%A5%E0%B8%B3%E0%B8%9B%E0%B8%B2%E0%B8%87"
+            },
+            {
+                "nameTh": "ประสิทธิ์ แก้วผัด",
+                "nameEn": "Prasit Kaewpad",
+                "category": "เครื่องปั้นดินเผาและเซรามิก",
+                "link": "https://www.google.com/maps/search/?api=1&query=867%20%E0%B8%A1.2%20%E0%B8%95.%E0%B8%8A%E0%B8%A1%E0%B8%9E%E0%B8%B9%20%E0%B8%AD.%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%20%E0%B8%88.%E0%B8%A5%E0%B8%B3%E0%B8%9B%E0%B8%B2%E0%B8%87%2052100"
+            },
+            {
+                "nameTh": "อารีรัตน์ โตเมศร",
+                "nameEn": "Areerat Tomas",
+                "category": "เครื่องปั้นดินเผาและเซรามิก",
+                "link": "https://www.google.com/maps/search/?api=1&query=439%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%888%20%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B8%AB%E0%B8%99%E0%B8%AD%E0%B8%87%E0%B8%A2%E0%B8%B2%E0%B8%87%20%E0%B8%95.%E0%B8%8A%E0%B8%A1%E0%B8%9E%E0%B8%B9%20%E0%B8%AD.%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%20%E0%B8%88.%E0%B8%A5%E0%B8%B3%E0%B8%9B%E0%B8%B2%E0%B8%87"
+            },
+            {
+                "nameTh": "ฉลอง ทองโคตร",
+                "nameEn": "Chalong Thongkhhot",
+                "category": "เครื่องหนัง",
+                "link": "https://www.google.com/maps/search/?api=1&query=113%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%885%20%E0%B8%95.%E0%B9%80%E0%B8%AA%E0%B8%A3%E0%B8%B4%E0%B8%A1%E0%B8%81%E0%B8%A5%E0%B8%B2%E0%B8%87%20%E0%B8%AD.%E0%B9%80%E0%B8%AA%E0%B8%A3%E0%B8%B4%E0%B8%A1%E0%B8%87%E0%B8%B2%E0%B8%A1%20%E0%B8%88.%E0%B8%A5%E0%B8%B3%E0%B8%9B%E0%B8%B2%E0%B8%87"
+            },
+            {
+                "nameTh": "คำสุข จริงมาก",
+                "nameEn": "Khamsuk Jringmark",
+                "category": "งานจักสาน",
+                "link": "https://www.google.com/maps/search/?api=1&query=36%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%205%20%E0%B8%95.%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B8%84%E0%B9%88%E0%B8%B2%20%E0%B8%AD.%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%20%E0%B8%88.%E0%B8%A5%E0%B8%B3%E0%B8%9B%E0%B8%B2%E0%B8%87%2052000"
+            },
+            {
+                "nameTh": "สุนีย์ พรหมแหลม",
+                "nameEn": "Sunee Khomlaem",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=199%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%205%20%E0%B8%95.%E0%B8%97%E0%B8%B8%E0%B9%88%E0%B8%87%E0%B8%81%E0%B8%A7%E0%B9%8B%E0%B8%B2%E0%B8%A7%20%E0%B8%AD.%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%E0%B8%9B%E0%B8%B2%E0%B8%99%20%E0%B8%88.%E0%B8%A5%E0%B8%B3%E0%B8%9B%E0%B8%B2%E0%B8%87%2052240"
+            },
+            {
+                "nameTh": "สุรินทร์พร ยาง",
+                "nameEn": "Surinporn Yang",
+                "category": "งานผ้าและสิ่งทอ",
+                "link": "https://www.google.com/maps/search/?api=1&query=99%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%206%20%E0%B8%95.%E0%B8%AB%E0%B8%B1%E0%B8%A7%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%20%E0%B8%AD.%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%E0%B8%9B%E0%B8%B2%E0%B8%99%20%E0%B8%88.%E0%B8%A5%E0%B8%B3%E0%B8%9B%E0%B8%B2%E0%B8%87%2052240"
+            },
+            {
+                "nameTh": "สุทธิพร บุตรปะสะ",
+                "nameEn": "Sutthiphorn Butpasa",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=147%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%882%20%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B8%A8%E0%B8%A3%E0%B8%B5%E0%B8%94%E0%B8%AD%E0%B8%99%E0%B8%A1%E0%B8%B9%E0%B8%A5%20%E0%B8%95%E0%B8%B3%E0%B8%9A%E0%B8%A5%E0%B9%81%E0%B8%88%E0%B9%89%E0%B8%8B%E0%B9%89%E0%B8%AD%E0%B8%99%20%E0%B8%AD.%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%E0%B8%9B%E0%B8%B2%E0%B8%99%20%E0%B8%88.%E0%B8%A5%E0%B8%B3%E0%B8%9B%E0%B8%B2%E0%B8%87%2052240"
+            },
+            {
+                "nameTh": "ศักดิ์สิทธิ์ จอมฟอง",
+                "nameEn": "Saksit jomfong",
+                "category": "เครื่องปั้นดินเผาและเซรามิก",
+                "link": "https://www.google.com/maps/search/?api=1&query=119/1%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B8%81%E0%B8%B2%E0%B8%94%E0%B9%80%E0%B8%A1%E0%B8%86%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%205%20%E0%B8%95.%E0%B8%8A%E0%B8%A1%E0%B8%9E%E0%B8%B9%20%E0%B8%AD.%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%20%E0%B8%88.%E0%B8%A5%E0%B8%B3%E0%B8%9B%E0%B8%B2%E0%B8%87%2052100"
+            },
+            {
+                "nameTh": "สมพร ใจคำ",
+                "nameEn": "Somporn ​Jaikam",
+                "category": "งานผ้าและสิ่งทอ",
+                "link": "https://www.google.com/maps/search/?api=1&query=57%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%201%20%E0%B8%95.%E0%B8%A7%E0%B8%B1%E0%B8%87%E0%B8%97%E0%B8%A3%E0%B8%B2%E0%B8%A2%E0%B8%84%E0%B8%B3%20%E0%B8%AD.%E0%B8%A7%E0%B8%B1%E0%B8%87%E0%B9%80%E0%B8%AB%E0%B8%99%E0%B8%B7%E0%B8%AD%20%E0%B8%88.%E0%B8%A5%E0%B8%B3%E0%B8%9B%E0%B8%B2%E0%B8%87%2052140"
+            },
+            {
+                "nameTh": "จันทร์ธพร สุจริต",
+                "nameEn": "Chanthaphon Sutarit",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=395%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%2011%20%E0%B8%95.%E0%B9%81%E0%B8%88%E0%B9%89%E0%B8%8B%E0%B9%89%E0%B8%AD%E0%B8%99%20%E0%B8%AD.%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%E0%B8%9B%E0%B8%B2%E0%B8%99%20%E0%B8%88.%E0%B8%A5%E0%B8%B3%E0%B8%9B%E0%B8%B2%E0%B8%8752240"
+            },
+            {
+                "nameTh": "นิตยา แก้วเตียม",
+                "nameEn": "Nittaya Kaewtiam",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B9%80%E0%B8%A5%E0%B8%82%E0%B8%97%E0%B8%B5%E0%B9%88%2019/6%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%206%20%E0%B8%95.%E0%B8%99%E0%B8%B2%E0%B8%84%E0%B8%A3%E0%B8%B1%E0%B8%A7%20%E0%B8%AD.%E0%B9%81%E0%B8%A1%E0%B9%88%E0%B8%97%E0%B8%B0%20%E0%B8%88.%E0%B8%A5%E0%B8%B3%E0%B8%9B%E0%B8%B2%E0%B8%87%2052150%20%E0%B9%80%E0%B8%9A%E0%B8%AD%E0%B8%A3%E0%B9%8C%E0%B9%82%E0%B8%97%E0%B8%A3%E0%B8%A8%E0%B8%B1%E0%B8%9E%E0%B8%97%E0%B9%8C%200841344633"
+            },
+            {
+                "nameTh": "สุกัลย์พัชร พฤกษ์ประมูล",
+                "nameEn": "Sukulphach Prukpramool",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B9%80%E0%B8%A5%E0%B8%82%E0%B8%97%E0%B8%B5%E0%B9%88%20204/1%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%2010%20%E0%B8%95.%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B8%81%E0%B8%B4%E0%B9%88%E0%B8%A7%20%E0%B8%AD.%E0%B9%81%E0%B8%A1%E0%B9%88%E0%B8%97%E0%B8%B0%20%E0%B8%88.%E0%B8%A5%E0%B8%B3%E0%B8%9B%E0%B8%B2%E0%B8%87%2052150"
+            },
+            {
+                "nameTh": "วรรณภา อินต๊ะคำเครือ",
+                "nameEn": "Wonnapa Intakhumkrua",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B9%80%E0%B8%A5%E0%B8%82%E0%B8%97%E0%B8%B5%E0%B9%88%202/2%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%205%20%E0%B8%95.%E0%B9%81%E0%B8%A1%E0%B9%88%E0%B8%A7%E0%B8%B0%20%E0%B8%AD.%E0%B9%80%E0%B8%96%E0%B8%B4%E0%B8%99%20%E0%B8%88.%E0%B8%A5%E0%B8%B3%E0%B8%9B%E0%B8%B2%E0%B8%87%2052230"
+            },
+            {
+                "nameTh": "ธวัชชัย ใจเย็น",
+                "nameEn": "Thawatchai Jaiyen",
+                "category": "เครื่องปั้นดินเผาและเซรามิก",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B9%80%E0%B8%A5%E0%B8%82%E0%B8%97%E0%B8%B5%E0%B9%88%20165%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%207%20%E0%B8%95.%E0%B8%97%E0%B9%88%E0%B8%B2%E0%B8%9C%E0%B8%B2%20%E0%B8%AD.%E0%B9%80%E0%B8%81%E0%B8%B2%E0%B8%B0%E0%B8%84%E0%B8%B2%20%E0%B8%88.%E0%B8%A5%E0%B8%B3%E0%B8%9B%E0%B8%B2%E0%B8%87%2052130"
+            },
+            {
+                "nameTh": "นายวัชรพงศ์ วงศ์แคะหล้า",
+                "nameEn": "Watcharapong Wongkala",
+                "category": "เครื่องปั้นดินเผาและเซรามิก",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B9%80%E0%B8%A5%E0%B8%82%E0%B8%97%E0%B8%B5%E0%B9%88%2020/1%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%20%E0%B8%96.%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B8%A8%E0%B8%A3%E0%B8%B5%E0%B8%AB%E0%B8%A1%E0%B8%A7%E0%B8%94%E0%B9%80%E0%B8%81%E0%B8%A5%E0%B9%89%E0%B8%B2%20%E0%B8%95.%E0%B8%8A%E0%B8%A1%E0%B8%9E%E0%B8%B9%20%E0%B8%AD.%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%20%E0%B8%88.%E0%B8%A5%E0%B8%B3%E0%B8%9B%E0%B8%B2%E0%B8%87%2052100"
+            },
+            {
+                "nameTh": "นายนิคม เครืออุ่น",
+                "nameEn": "Nikom Kreua-oun",
+                "category": "เครื่องปั้นดินเผาและเซรามิก",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B9%80%E0%B8%A5%E0%B8%82%E0%B8%97%E0%B8%B5%E0%B9%88%20149%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%889%20%E0%B8%96%E0%B8%99%E0%B8%99%E0%B8%A5%E0%B8%B3%E0%B8%9B%E0%B8%B2%E0%B8%87-%E0%B9%81%E0%B8%A1%E0%B9%88%E0%B8%97%E0%B8%B0%20%E0%B8%95.%E0%B8%8A%E0%B8%A1%E0%B8%9E%E0%B8%B9%20%E0%B8%AD.%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%20%E0%B8%88.%E0%B8%A5%E0%B8%B3%E0%B8%9B%E0%B8%B2%E0%B8%87%2052100"
+            },
+            {
+                "nameTh": "นางสาวยลลดา จะวะนะ",
+                "nameEn": "Yonlada Jawana",
+                "category": "งานผ้าและสิ่งทอ",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B9%80%E0%B8%A5%E0%B8%82%E0%B8%97%E0%B8%B5%E0%B9%88%205/1%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%203%20%E0%B8%96.%E0%B8%9E%E0%B8%A3%E0%B8%B0%E0%B9%80%E0%B8%88%E0%B9%89%E0%B8%B2%E0%B8%97%E0%B8%B1%E0%B8%99%E0%B9%83%E0%B8%88%20%E0%B8%95.%E0%B8%95%E0%B9%89%E0%B8%99%E0%B8%98%E0%B8%87%E0%B8%8A%E0%B8%B1%E0%B8%A2%20%E0%B8%AD.%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%20%E0%B8%88.%E0%B8%A5%E0%B8%B3%E0%B8%9B%E0%B8%B2%E0%B8%87%2052000"
+            },
+            {
+                "nameTh": "นายนิติ ทุ่งมีผล",
+                "nameEn": "Niti Tungmepon",
+                "category": "เครื่องปั้นดินเผาและเซรามิก",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B9%80%E0%B8%A5%E0%B8%82%E0%B8%97%E0%B8%B5%E0%B9%88%2095%20%E0%B8%A1.6%20%E0%B8%95.%E0%B8%AB%E0%B8%99%E0%B8%AD%E0%B8%87%E0%B8%AB%E0%B8%A5%E0%B9%88%E0%B8%A1%20%E0%B8%AD.%E0%B8%AB%E0%B9%89%E0%B8%B2%E0%B8%87%E0%B8%89%E0%B8%B1%E0%B8%95%E0%B8%A3%20%E0%B8%88.%E0%B8%A5%E0%B8%B3%E0%B8%9B%E0%B8%B2%E0%B8%87%2052190"
+            }
+        ]
+    },
+    {
+        "province": "ลำพูน (Lamphun)",
+        "lat": 18.5745,
+        "lng": 99.0087,
+        "count": 14,
+        "artisans": [
+            {
+                "nameTh": "นันท์นภัทร แปทู",
+                "nameEn": "Nannaphat Paetoo",
+                "category": "งานผ้าและสิ่งทอ",
+                "link": "https://www.google.com/maps/search/?api=1&query=14%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%8812%20%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B9%80%E0%B8%94%E0%B9%88%E0%B8%99%E0%B8%A2%E0%B8%B2%E0%B8%87%E0%B8%A1%E0%B8%B9%E0%B8%A5%20%E0%B8%95%E0%B8%B3%E0%B8%9A%E0%B8%A5%E0%B8%99%E0%B8%B2%E0%B8%97%E0%B8%A3%E0%B8%B2%E0%B8%A2%20%E0%B8%AD%E0%B8%B3%E0%B9%80%E0%B8%A0%E0%B8%AD%E0%B8%A5%E0%B8%B5%E0%B9%89%20%E0%B8%88%E0%B8%B1%E0%B8%87%E0%B8%AB%E0%B8%A7%E0%B8%B1%E0%B8%94%E0%B8%A5%E0%B8%B3%E0%B8%9E%E0%B8%B9%E0%B8%99%2051110"
+            },
+            {
+                "nameTh": "จิดาภา ตู้จินดา",
+                "nameEn": "Jidapa Toochinda",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=216%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%E0%B8%97%E0%B8%B5%E0%B9%88%209%20%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B8%9B%E0%B9%88%E0%B8%B2%E0%B9%80%E0%B8%AA%E0%B9%89%E0%B8%B2%20%E0%B8%95%E0%B8%B3%E0%B8%9A%E0%B8%A5%E0%B8%AD%E0%B8%B8%E0%B9%82%E0%B8%A1%E0%B8%87%E0%B8%84%E0%B9%8C%20%E0%B8%AD%E0%B8%B3%E0%B9%80%E0%B8%A0%E0%B8%AD%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%20%E0%B8%88%E0%B8%B1%E0%B8%87%E0%B8%AB%E0%B8%A7%E0%B8%B1%E0%B8%94%E0%B8%A5%E0%B8%B3%E0%B8%9E%E0%B8%B9%E0%B8%99%2051000"
+            },
+            {
+                "nameTh": "นางสาวดวงรัตน์ สุขสุด",
+                "nameEn": "Miss Duangrat Suksud",
+                "category": "งานผ้าและสิ่งทอ",
+                "link": "https://www.google.com/maps/search/?api=1&query=107/1%20%E0%B8%A1.7%20%E0%B8%95.%E0%B9%81%E0%B8%A1%E0%B9%88%E0%B9%81%E0%B8%A3%E0%B8%87%20%E0%B8%AD.%E0%B8%9B%E0%B9%88%E0%B8%B2%E0%B8%8B%E0%B8%B2%E0%B8%87%20%E0%B8%88.%E0%B8%A5%E0%B8%B3%E0%B8%9E%E0%B8%B9%E0%B8%99%2051120"
+            },
+            {
+                "nameTh": "นายอดุลย์ เชื้อจิต",
+                "nameEn": "Mr. Adun Chueachit",
+                "category": "เครื่องปั้นดินเผาและเซรามิก",
+                "link": "https://www.google.com/maps/search/?api=1&query=286/1%20%E0%B8%94%E0%B8%87%E0%B8%AB%E0%B8%A5%E0%B8%A7%E0%B8%87%20%E0%B8%A1.5%20%E0%B8%95.%E0%B8%A7%E0%B8%B1%E0%B8%87%E0%B8%9D%E0%B8%B2%E0%B8%87%20%E0%B8%AD.%E0%B9%80%E0%B8%A7%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%AB%E0%B8%99%E0%B8%AD%E0%B8%87%E0%B8%A5%E0%B9%88%E0%B8%AD%E0%B8%87%20%E0%B8%88.%E0%B8%A5%E0%B8%B3%E0%B8%9E%E0%B8%B9%E0%B8%99%2051120%20%E0%B9%80%E0%B8%9A%E0%B8%AD%E0%B8%A3%E0%B9%8C%E0%B9%82%E0%B8%97%E0%B8%A3%20086-186-9437"
+            },
+            {
+                "nameTh": "ทวิชาติ จันทร์ทอง",
+                "nameEn": "Twichat Chanthong",
+                "category": "งานแกะสลัก",
+                "link": "https://www.google.com/maps/search/?api=1&query=31%20%E0%B8%A1.3%20%E0%B8%95.%E0%B8%9B%E0%B9%88%E0%B8%B2%E0%B8%8B%E0%B8%B2%E0%B8%87%20%E0%B8%AD.%E0%B8%9B%E0%B9%88%E0%B8%B2%E0%B8%8B%E0%B8%B2%E0%B8%87%20%E0%B8%88.%E0%B8%A5%E0%B8%B3%E0%B8%9E%E0%B8%B9%E0%B8%99%2051120"
+            },
+            {
+                "nameTh": "วราพร สุยะใหญ่",
+                "nameEn": "Waraphorn Suyayai",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=69%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%8817%20%E0%B8%95.%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B8%98%E0%B8%B4%20%E0%B8%AD.%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B8%98%E0%B8%B4%20%E0%B8%88.%E0%B8%A5%E0%B8%B3%E0%B8%9E%E0%B8%B9%E0%B8%99%2051180"
+            },
+            {
+                "nameTh": "บุญธรรม ไชกาศ",
+                "nameEn": "Boontham Chaikad",
+                "category": "งานผ้าและสิ่งทอ",
+                "link": "https://www.google.com/maps/search/?api=1&query=19%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%209%20%E0%B8%95.%E0%B9%80%E0%B8%AB%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%E0%B8%88%E0%B8%B5%E0%B9%89%20%E0%B8%AD.%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%20%E0%B8%88.%E0%B8%A5%E0%B8%B3%E0%B8%9E%E0%B8%B9%E0%B8%99"
+            },
+            {
+                "nameTh": "อรทัย ไหมแก้ว",
+                "nameEn": "Orathai Maikaew",
+                "category": "งานผ้าและสิ่งทอ",
+                "link": "https://www.google.com/maps/search/?api=1&query=147%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%205%20%E0%B8%95.%E0%B8%95%E0%B8%B0%E0%B9%80%E0%B8%84%E0%B8%B5%E0%B8%A2%E0%B8%99%E0%B8%9B%E0%B8%A1%20%E0%B8%AD.%E0%B8%97%E0%B8%B8%E0%B9%88%E0%B8%87%E0%B8%AB%E0%B8%B1%E0%B8%A7%E0%B8%8A%E0%B9%89%E0%B8%B2%E0%B8%87%20%E0%B8%88.%E0%B8%A5%E0%B8%B3%E0%B8%9E%E0%B8%B9%E0%B8%99%2051120"
+            },
+            {
+                "nameTh": "ดวงใจ กิติกาศ",
+                "nameEn": "Duangjai Kitikad",
+                "category": "งานผ้าและสิ่งทอ",
+                "link": "https://www.google.com/maps/search/?api=1&query=88%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%2016%20%E0%B8%95.%E0%B8%97%E0%B8%B2%E0%B8%81%E0%B8%B2%E0%B8%A8%20%E0%B8%AD.%E0%B9%81%E0%B8%A1%E0%B9%88%E0%B8%97%E0%B8%B2%20%E0%B8%88.%E0%B8%A5%E0%B8%B3%E0%B8%9E%E0%B8%B9%E0%B8%99%2051140"
+            },
+            {
+                "nameTh": "สายทอง เงินเลิศสกุล",
+                "nameEn": "Saithong Ngoenletsakun",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B9%80%E0%B8%A5%E0%B8%82%E0%B8%97%E0%B8%B5%E0%B9%88%20314%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%206%20%E0%B8%95.%E0%B8%99%E0%B8%B2%E0%B8%97%E0%B8%A3%E0%B8%B2%E0%B8%A2%20%E0%B8%AD.%E0%B8%A5%E0%B8%B5%E0%B9%89%20%E0%B8%88.%E0%B8%A5%E0%B8%B3%E0%B8%9E%E0%B8%B9%E0%B8%99%2051110"
+            },
+            {
+                "nameTh": "นงคราญ ไทยใหม่",
+                "nameEn": "Nongkhan Thaimai",
+                "category": "งานผ้าและสิ่งทอ",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B9%80%E0%B8%A5%E0%B8%82%E0%B8%97%E0%B8%B5%E0%B9%88%2078/1%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%208%20%E0%B8%95.%E0%B8%95%E0%B8%B0%E0%B9%80%E0%B8%84%E0%B8%B5%E0%B8%A2%E0%B8%99%E0%B8%9B%E0%B8%A1%20%E0%B8%AD.%E0%B8%97%E0%B8%B8%E0%B9%88%E0%B8%87%E0%B8%AB%E0%B8%B1%E0%B8%A7%E0%B8%8A%E0%B9%89%E0%B8%B2%E0%B8%87%20%E0%B8%88.%E0%B8%A5%E0%B8%B3%E0%B8%9E%E0%B8%B9%E0%B8%99%2051160"
+            },
+            {
+                "nameTh": "นายชิตนุสันต์ ตาจุมปา",
+                "nameEn": "Chitnusun Tajumpa",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B9%80%E0%B8%A5%E0%B8%82%E0%B8%97%E0%B8%B5%E0%B9%88%20325%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%205%20%E0%B8%95.%E0%B8%A7%E0%B8%B1%E0%B8%87%E0%B8%9C%E0%B8%B2%E0%B8%87%20%E0%B8%AD.%E0%B9%80%E0%B8%A7%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%AB%E0%B8%99%E0%B8%AD%E0%B8%87%E0%B8%A5%E0%B9%88%E0%B8%AD%E0%B8%87%20%E0%B8%88.%E0%B8%A5%E0%B8%B3%E0%B8%9E%E0%B8%B9%E0%B8%99%2051120"
+            },
+            {
+                "nameTh": "นางสาวธีรา ตู้จินดา",
+                "nameEn": "Teera Toochinda",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B9%80%E0%B8%A5%E0%B8%82%E0%B8%97%E0%B8%B5%E0%B9%88%20216%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%209%20%E0%B8%8B.%E0%B8%AD%E0%B8%B8%E0%B9%82%E0%B8%A1%E0%B8%87%E0%B8%84%E0%B9%8C%2046%20%E0%B8%95.%E0%B8%AD%E0%B8%B8%E0%B9%82%E0%B8%A1%E0%B8%87%E0%B8%84%E0%B9%8C%20%E0%B8%AD.%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%20%E0%B8%88.%E0%B8%A5%E0%B8%B3%E0%B8%9E%E0%B8%B9%E0%B8%99%2051150"
+            },
+            {
+                "nameTh": "นางสาวนัยรัตน์ เงินเลิศสกุล",
+                "nameEn": "Naiyarut Ngoenloedsakun",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B9%80%E0%B8%A5%E0%B8%82%E0%B8%97%E0%B8%B5%E0%B9%88%2071/4%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%2012%20%E0%B8%95.%E0%B8%99%E0%B8%B2%E0%B8%97%E0%B8%A3%E0%B8%B2%E0%B8%A2%20%E0%B8%AD.%E0%B8%A5%E0%B8%B5%E0%B9%89%20%E0%B8%88.%E0%B8%A5%E0%B8%B3%E0%B8%9E%E0%B8%B9%E0%B8%99%2051110"
+            }
+        ]
+    },
+    {
+        "province": "เชียงราย (Chiang Rai)",
+        "lat": 19.9105,
+        "lng": 99.8406,
+        "count": 27,
+        "artisans": [
+            {
+                "nameTh": "กฤษณา เพียราธิสิทธิ์",
+                "nameEn": "Krissana Piaratisit",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=KRISSANA%20HELLO%20%28THAILAND%29%20Company%20Limited%20693/173%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%E0%B8%97%E0%B8%B5%E0%B9%88%2024%20%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B8%81%E0%B8%A3%E0%B8%A3%E0%B8%B1%E0%B8%90%20%E0%B8%8B%E0%B8%AD%E0%B8%A2%207%20%E0%B8%95%E0%B8%B3%E0%B8%9A%E0%B8%A5%E0%B8%A3%E0%B8%AD%E0%B8%9A%E0%B9%80%E0%B8%A7%E0%B8%B5%E0%B8%A2%E0%B8%87%20%E0%B8%AD%E0%B8%B3%E0%B9%80%E0%B8%A0%E0%B8%AD%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%20%E0%B8%88%E0%B8%B1%E0%B8%87%E0%B8%AB%E0%B8%A7%E0%B8%B1%E0%B8%94%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%A3%E0%B8%B2%E0%B8%A2%2057000"
+            },
+            {
+                "nameTh": "อริญชญา วงศ์ใหญ่",
+                "nameEn": "Arinchaya Wongyai",
+                "category": "งานผ้าและสิ่งทอ",
+                "link": "https://www.google.com/maps/search/?api=1&query=215/1%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%E0%B8%97%E0%B8%B5%E0%B9%88%206%20%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B8%AB%E0%B9%89%E0%B8%A7%E0%B8%A2%E0%B9%80%E0%B8%A1%E0%B9%87%E0%B8%87%20%E0%B8%96%E0%B8%99%E0%B8%99%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%82%E0%B8%AD%E0%B8%87-%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B9%81%E0%B8%AA%E0%B8%99%20%E0%B8%95%E0%B8%B3%E0%B8%9A%E0%B8%A5%E0%B9%80%E0%B8%A7%E0%B8%B5%E0%B8%A2%E0%B8%87%20%E0%B8%AD%E0%B8%B3%E0%B9%80%E0%B8%A0%E0%B8%AD%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%82%E0%B8%AD%E0%B8%87%20%E0%B8%88%E0%B8%B1%E0%B8%87%E0%B8%AB%E0%B8%A7%E0%B8%B1%E0%B8%94%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%A3%E0%B8%B2%E0%B8%A2%2057140"
+            },
+            {
+                "nameTh": "พวงทอง สุทธิจินดา",
+                "nameEn": "Poungtong Suttijinda",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B8%81%E0%B8%A5%E0%B8%B8%E0%B9%88%E0%B8%A1%E0%B8%AA%E0%B9%88%E0%B8%87%E0%B9%80%E0%B8%AA%E0%B8%A3%E0%B8%B4%E0%B8%A1%E0%B8%AD%E0%B8%B2%E0%B8%8A%E0%B8%B5%E0%B8%9E%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%A3%E0%B8%B2%E0%B8%A2%2056%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%E0%B8%97%E0%B8%B5%E0%B9%88%208%20%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B8%94%E0%B8%AD%E0%B8%99%E0%B9%81%E0%B8%81%E0%B9%89%E0%B8%A7%20%E0%B8%95%E0%B8%B3%E0%B8%9A%E0%B8%A5%E0%B8%94%E0%B8%B9%E0%B9%88%E0%B9%83%E0%B8%95%E0%B9%89%20%E0%B8%AD%E0%B8%B3%E0%B9%80%E0%B8%A0%E0%B8%AD%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%20%E0%B8%88%E0%B8%B1%E0%B8%87%E0%B8%AB%E0%B8%A7%E0%B8%B1%E0%B8%94%E0%B8%99%E0%B9%88%E0%B8%B2%E0%B8%99%2055000"
+            },
+            {
+                "nameTh": "นางสาวอมรรัตน์ ยกยอน",
+                "nameEn": "Miss Amornrat Yokyon",
+                "category": "งานผ้าและสิ่งทอ",
+                "link": "https://www.google.com/maps/search/?api=1&query=187%20%E0%B8%A1.19%20%E0%B8%96%E0%B8%99%E0%B8%99%20%E0%B9%80%E0%B8%94%E0%B9%88%E0%B8%99%E0%B8%97%E0%B9%88%E0%B8%B2-%E0%B8%94%E0%B8%87%E0%B8%A1%E0%B8%B0%E0%B8%94%E0%B8%B0%20%E0%B8%95.%E0%B8%9B%E0%B9%88%E0%B8%B2%E0%B8%AD%E0%B9%89%E0%B8%AD%E0%B8%94%E0%B8%AD%E0%B8%99%E0%B8%8A%E0%B8%B1%E0%B8%A2%20%E0%B8%AD.%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%A3%E0%B8%B2%E0%B8%A2%2057000"
+            },
+            {
+                "nameTh": "นางสาวปราจีน เวียงโอสถ",
+                "nameEn": "Miss Prajeen Wiangosod",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=20%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%E0%B8%97%E0%B8%B5%E0%B9%8811%20%E0%B8%8B%E0%B8%AD%E0%B8%A2%204%20%E0%B8%98%E0%B8%B2%E0%B8%A3%E0%B8%97%E0%B8%AD%E0%B8%87%20%E0%B8%96%E0%B8%99%E0%B8%99%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%A3%E0%B8%B2%E0%B8%A2-%E0%B9%80%E0%B8%A7%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%8A%E0%B8%B1%E0%B8%A2%20%E0%B8%95.%E0%B9%80%E0%B8%A7%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%8A%E0%B8%B1%E0%B8%A2%20%E0%B8%AD.%E0%B9%80%E0%B8%A7%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%8A%E0%B8%B1%E0%B8%A2%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%A3%E0%B8%B2%E0%B8%A2%2057210"
+            },
+            {
+                "nameTh": "นางวิไล นาไพวรรณ์",
+                "nameEn": "Mrs. Wilai Napaiwan",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=3%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%2012%20%E0%B8%95.%E0%B8%94%E0%B8%AD%E0%B8%99%E0%B8%A8%E0%B8%B4%E0%B8%A5%E0%B8%B2%20%E0%B8%AD.%E0%B9%80%E0%B8%A7%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%8A%E0%B8%B1%E0%B8%A2%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%A3%E0%B8%B2%E0%B8%A2%2057210"
+            },
+            {
+                "nameTh": "นงค์นุช วิริยะเกรียง",
+                "nameEn": "Nongnuch Wiriyakrieng",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=522/128%20%E0%B8%96.%E0%B8%9E%E0%B8%AB%E0%B8%A5%E0%B9%82%E0%B8%A2%E0%B8%98%E0%B8%B4%E0%B8%99%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B8%9E%E0%B8%A4%E0%B8%A9%E0%B8%8A%E0%B8%B2%E0%B8%95%E0%B8%B4%20%E0%B8%95.%E0%B8%97%E0%B9%88%E0%B8%B2%E0%B8%AA%E0%B8%B2%E0%B8%A2%20%E0%B8%AD.%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%A3%E0%B8%B2%E0%B8%A2%2057000"
+            },
+            {
+                "nameTh": "ชนิดาภา พวงพิโล",
+                "nameEn": "Chanidapha Phoungpilo",
+                "category": "เครื่องปั้นดินเผาและเซรามิก",
+                "link": "https://www.google.com/maps/search/?api=1&query=109%20%E0%B8%8B%E0%B8%AD%E0%B8%A2%203%20%E0%B8%A1.15%20%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B9%80%E0%B8%A7%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%81%E0%B8%B2%E0%B8%AB%E0%B8%A5%E0%B8%87%20%E0%B8%95.%E0%B9%80%E0%B8%A7%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%81%E0%B8%B2%E0%B8%AB%E0%B8%A5%E0%B8%87%20%E0%B8%AD.%E0%B9%80%E0%B8%A7%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%9B%E0%B9%88%E0%B8%B2%E0%B9%80%E0%B8%9B%E0%B9%89%E0%B8%B2%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%A3%E0%B8%B2%E0%B8%A2%2057260"
+            },
+            {
+                "nameTh": "วลีญา คำน้อย",
+                "nameEn": "Waleeya Khamnoi",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=32%20%E0%B8%A1.2%20%E0%B8%AD.%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%A3%E0%B8%B2%E0%B8%A2%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%A3%E0%B8%B2%E0%B8%A2%2057000"
+            },
+            {
+                "nameTh": "นิคม อินต๊ะ",
+                "nameEn": "Nikom Inta",
+                "category": "งานแก้ว",
+                "link": "https://www.google.com/maps/search/?api=1&query=51%20%E0%B8%A1.8%20%E0%B8%95.%E0%B8%AA%E0%B8%B1%E0%B8%99%E0%B8%97%E0%B8%A3%E0%B8%B2%E0%B8%A2%20%E0%B8%AD.%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%A3%E0%B8%B2%E0%B8%A2%2057000"
+            },
+            {
+                "nameTh": "จุฑามณี อาจกล้า",
+                "nameEn": "Jutamanee Alkar",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=170%20%E0%B8%A1.4%20%E0%B8%8B%E0%B8%AD%E0%B8%A22%20%E0%B8%95.%E0%B9%80%E0%B8%A7%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%8A%E0%B8%B1%E0%B8%A2%20%E0%B8%AD.%E0%B9%80%E0%B8%A7%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%8A%E0%B8%B1%E0%B8%A2%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%A3%E0%B8%B2%E0%B8%A2%2057210"
+            },
+            {
+                "nameTh": "ดาวใจ หล้าหลวง",
+                "nameEn": "Dowjai Laluang",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=142%20%E0%B8%A1.8%20%E0%B8%95.%E0%B8%A7%E0%B8%B2%E0%B8%A7%E0%B8%B5%20%E0%B8%AD.%E0%B9%81%E0%B8%A1%E0%B9%88%E0%B8%AA%E0%B8%A3%E0%B8%A7%E0%B8%A2%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%A3%E0%B8%B2%E0%B8%A2%2057180"
+            },
+            {
+                "nameTh": "นิธี สุธรรมรักษ์",
+                "nameEn": "Nithee Suthammaruk",
+                "category": "งานผ้าและสิ่งทอ",
+                "link": "https://www.google.com/maps/search/?api=1&query=109%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%882%20%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B8%AA%E0%B8%B1%E0%B8%99%E0%B8%81%E0%B8%AD%E0%B8%87%20%E0%B8%95.%E0%B9%81%E0%B8%A1%E0%B9%88%E0%B9%84%E0%B8%A3%E0%B9%88%20%E0%B8%AD.%E0%B9%81%E0%B8%A1%E0%B9%88%E0%B8%88%E0%B8%B1%E0%B8%99%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%A3%E0%B8%B2%E0%B8%A2%2057240"
+            },
+            {
+                "nameTh": "สุกฤตา อนันตะ",
+                "nameEn": "Sukrita Anunta",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=346%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%886%20%E0%B8%95.%E0%B9%81%E0%B8%A1%E0%B9%88%E0%B8%A2%E0%B8%B2%E0%B8%A7%20%E0%B8%AD.%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%A3%E0%B8%B2%E0%B8%A2%2057100"
+            },
+            {
+                "nameTh": "พิรุณ เขื่อนเพชร",
+                "nameEn": "Prirun Khuenphet",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=314%20%E0%B8%A1.5%20%E0%B8%95.%E0%B8%99%E0%B8%B2%E0%B8%87%E0%B9%81%E0%B8%A5%20%E0%B8%AD.%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%A3%E0%B8%B2%E0%B8%A2%2057100"
+            },
+            {
+                "nameTh": "แสงระวี สิทธิวัง",
+                "nameEn": "Sangrawee Sittiwang",
+                "category": "งานแกะสลัก",
+                "link": "https://www.google.com/maps/search/?api=1&query=200%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%209%20%E0%B8%95.%E0%B9%80%E0%B8%A7%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%9E%E0%B8%B2%E0%B8%87%E0%B8%84%E0%B8%B3%20%E0%B8%AD.%E0%B9%81%E0%B8%A1%E0%B9%88%E0%B8%AA%E0%B8%B2%E0%B8%A2%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%A3%E0%B8%B2%E0%B8%A2%2057130"
+            },
+            {
+                "nameTh": "บัวผัด เตจะติ",
+                "nameEn": "Buaphat Techati",
+                "category": "งานจักสาน",
+                "link": "https://www.google.com/maps/search/?api=1&query=80%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%204%20%E0%B8%95.%E0%B9%81%E0%B8%A1%E0%B9%88%E0%B9%84%E0%B8%A3%E0%B9%88%20%E0%B8%AD.%E0%B9%81%E0%B8%A1%E0%B9%88%E0%B8%88%E0%B8%B1%E0%B8%99%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%A3%E0%B8%B2%E0%B8%A2%2057110"
+            },
+            {
+                "nameTh": "พวงรัตน์ แสงเพชร",
+                "nameEn": "Poungrat Sangpench",
+                "category": "งานผ้าและสิ่งทอ",
+                "link": "https://www.google.com/maps/search/?api=1&query=19%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%207%20%E0%B8%95.%E0%B9%80%E0%B8%A7%E0%B8%B5%E0%B8%A2%E0%B8%87%20%E0%B8%AD.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%82%E0%B8%AD%E0%B8%87%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%A3%E0%B8%B2%E0%B8%A2%2057140"
+            },
+            {
+                "nameTh": "ณัฐธิดา นาไพวรรณ์",
+                "nameEn": "Nattida Napaiwan",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B9%80%E0%B8%A5%E0%B8%82%E0%B8%97%E0%B8%B5%E0%B9%88%20203%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%2012%20%E0%B8%95.%E0%B8%94%E0%B8%AD%E0%B8%99%E0%B8%A8%E0%B8%B4%E0%B8%A5%E0%B8%B2%20%E0%B8%AD.%E0%B9%80%E0%B8%A7%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%8A%E0%B8%B1%E0%B8%A2%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%A3%E0%B8%B2%E0%B8%A2%2057210"
+            },
+            {
+                "nameTh": "อาปิ โอยแม",
+                "nameEn": "Api Aoymae",
+                "category": "งานผ้าและสิ่งทอ",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B9%80%E0%B8%A5%E0%B8%82%E0%B8%97%E0%B8%B5%E0%B9%88%20436%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%2018%20%E0%B8%95.%E0%B8%97%E0%B9%88%E0%B8%B2%E0%B8%81%E0%B9%8A%E0%B8%AD%20%E0%B8%AD.%E0%B9%81%E0%B8%A1%E0%B9%88%E0%B8%AA%E0%B8%A3%E0%B8%A7%E0%B8%A2%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%A3%E0%B8%B2%E0%B8%A2%2057180"
+            },
+            {
+                "nameTh": "มาลี ธรรมวงค์",
+                "nameEn": "Malee Thammawong",
+                "category": "งานผ้าและสิ่งทอ",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B9%80%E0%B8%A5%E0%B8%82%E0%B8%97%E0%B8%B5%E0%B9%88%2060%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%201%20%E0%B8%95.%E0%B8%A3%E0%B8%B4%E0%B8%A1%E0%B9%82%E0%B8%82%E0%B8%87%20%E0%B8%AD.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%82%E0%B8%AD%E0%B8%87%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%A3%E0%B8%B2%E0%B8%A2%2057140"
+            },
+            {
+                "nameTh": "สุรีย์ พรมมา",
+                "nameEn": "Sulee Phamma",
+                "category": "งานผ้าและสิ่งทอ",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B9%80%E0%B8%A5%E0%B8%82%E0%B8%97%E0%B8%B5%E0%B9%88%20195%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%205%20%E0%B8%95.%E0%B9%80%E0%B8%A7%E0%B8%B5%E0%B8%A2%E0%B8%87%20%E0%B8%AD.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B9%81%E0%B8%AA%E0%B8%99%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%A3%E0%B8%B2%E0%B8%A2%2057150"
+            },
+            {
+                "nameTh": "ดวงแข ช่างคำ",
+                "nameEn": "Duangkhae Changkham",
+                "category": "งานจักสาน",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B9%80%E0%B8%A5%E0%B8%82%E0%B8%97%E0%B8%B5%E0%B9%88%20164%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%204%20%E0%B8%95.%E0%B8%AB%E0%B9%89%E0%B8%A7%E0%B8%A2%E0%B9%84%E0%B8%84%E0%B8%A3%E0%B9%89%20%E0%B8%AD.%E0%B9%81%E0%B8%A1%E0%B9%88%E0%B8%AA%E0%B8%B2%E0%B8%A2%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%A3%E0%B8%B2%E0%B8%A2%2057220"
+            },
+            {
+                "nameTh": "นางเบญจพร นามติ๊บ",
+                "nameEn": "Benjaporn Namtip",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B9%80%E0%B8%A5%E0%B8%82%E0%B8%97%E0%B8%B5%E0%B9%88%20272%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%206%20%E0%B8%95.%E0%B9%80%E0%B8%81%E0%B8%B2%E0%B8%B0%E0%B8%8A%E0%B9%89%E0%B8%B2%E0%B8%87%20%E0%B8%AD.%E0%B9%81%E0%B8%A1%E0%B9%88%E0%B8%AA%E0%B8%B2%E0%B8%A2%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%A3%E0%B8%B2%E0%B8%A2%2057130"
+            },
+            {
+                "nameTh": "นางเบญจาวรรณ แจ่มกะจ่าง",
+                "nameEn": "Banjawan Jamkajang",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B9%80%E0%B8%A5%E0%B8%82%E0%B8%97%E0%B8%B5%E0%B9%88%2050/1%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%208%20%E0%B8%95.%E0%B9%80%E0%B8%A7%E0%B8%B5%E0%B8%A2%E0%B8%87%20%E0%B8%AD.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%82%E0%B8%AD%E0%B8%87%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%A3%E0%B8%B2%E0%B8%A2%2057140"
+            },
+            {
+                "nameTh": "นางสาวชนิกานต์ วรรักษ์นิติกุล",
+                "nameEn": "Chanikan Woraraknitnitikun",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B9%80%E0%B8%A5%E0%B8%82%E0%B8%97%E0%B8%B5%E0%B9%88%20459%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%208%20%E0%B8%95.%E0%B9%80%E0%B8%A7%E0%B8%B5%E0%B8%A2%E0%B8%87%20%E0%B8%AD.%E0%B9%80%E0%B8%A7%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%9B%E0%B9%88%E0%B8%B2%E0%B9%80%E0%B8%9B%E0%B9%89%E0%B8%B2%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%A3%E0%B8%B2%E0%B8%A2%2057170"
+            },
+            {
+                "nameTh": "นายอินสอน ติ๊บโครต",
+                "nameEn": "Insorn Tikote",
+                "category": "งานจักสาน",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B9%80%E0%B8%A5%E0%B8%82%E0%B8%97%E0%B8%B5%E0%B9%88%20158/1%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%208%20%E0%B8%95.%E0%B8%84%E0%B8%A3%E0%B8%B6%E0%B9%88%E0%B8%87%20%E0%B8%AD.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%82%E0%B8%AD%E0%B8%87%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%A3%E0%B8%B2%E0%B8%A2%2057140"
+            }
+        ]
+    },
+    {
+        "province": "เชียงใหม่ (Chiang Mai)",
+        "lat": 18.7883,
+        "lng": 98.9853,
+        "count": 55,
+        "artisans": [
+            {
+                "nameTh": "สุพัตรา จิโน",
+                "nameEn": "Supattra Jino",
+                "category": "งานผ้าและสิ่งทอ",
+                "link": "https://www.google.com/maps/search/?api=1&query=15/5%20%E0%B8%8B%E0%B8%AD%E0%B8%A21%20%E0%B8%95%E0%B8%B3%E0%B8%9A%E0%B8%A5%E0%B8%A8%E0%B8%A3%E0%B8%B5%E0%B8%A0%E0%B8%B9%E0%B8%A1%E0%B8%B4%20%E0%B8%AD%E0%B8%B3%E0%B9%80%E0%B8%A0%E0%B8%AD%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%20%E0%B8%88%E0%B8%B1%E0%B8%87%E0%B8%AB%E0%B8%A7%E0%B8%B1%E0%B8%94%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B9%83%E0%B8%AB%E0%B8%A1%E0%B9%88%2050200"
+            },
+            {
+                "nameTh": "ศศิวิพร ปิ่นทอง",
+                "nameEn": "Sasiviporn Pintong",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=127/29%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%E0%B8%97%E0%B8%B5%E0%B9%88%2013%20%E0%B8%95%E0%B8%B3%E0%B8%9A%E0%B8%A5%E0%B8%9B%E0%B9%88%E0%B8%B2%E0%B9%81%E0%B8%94%E0%B8%94%20%E0%B8%AD%E0%B8%B3%E0%B9%80%E0%B8%A0%E0%B8%AD%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B9%83%E0%B8%AB%E0%B8%A1%E0%B9%88%20%E0%B8%88%E0%B8%B1%E0%B8%87%E0%B8%AB%E0%B8%A7%E0%B8%B1%E0%B8%94%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B9%83%E0%B8%AB%E0%B8%A1%E0%B9%88%2050100"
+            },
+            {
+                "nameTh": "ยุทธนา บุญประคอง",
+                "nameEn": "Yutthana Boonpragong",
+                "category": "งานแกะสลัก",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B8%9E%E0%B8%B4%E0%B8%9E%E0%B8%B4%E0%B8%98%E0%B8%A0%E0%B8%B1%E0%B8%93%E0%B8%91%E0%B9%8C%E0%B8%95%E0%B8%B8%E0%B9%8A%E0%B8%81%E0%B8%95%E0%B8%B2%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B9%83%E0%B8%AB%E0%B8%A1%E0%B9%88%20187/2%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%E0%B8%97%E0%B8%B5%E0%B9%88%209%20%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B8%94%E0%B8%87%E0%B8%82%E0%B8%B5%E0%B9%89%E0%B9%80%E0%B8%AB%E0%B8%A5%E0%B9%87%E0%B8%81%20%E0%B8%95%E0%B8%B3%E0%B8%9A%E0%B8%A5%E0%B8%A1%E0%B8%B0%E0%B8%82%E0%B8%B2%E0%B8%A1%E0%B8%AB%E0%B8%A5%E0%B8%A7%E0%B8%87%20%E0%B8%AD%E0%B8%B3%E0%B9%80%E0%B8%A0%E0%B8%AD%E0%B8%AA%E0%B8%B1%E0%B8%99%E0%B8%9B%E0%B9%88%E0%B8%B2%E0%B8%95%E0%B8%AD%E0%B8%87%20%E0%B8%88%E0%B8%B1%E0%B8%87%E0%B8%AB%E0%B8%A7%E0%B8%B1%E0%B8%94%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B9%83%E0%B8%AB%E0%B8%A1%E0%B9%88%2050120"
+            },
+            {
+                "nameTh": "อารียา กุยแก้ว",
+                "nameEn": "Areeya Kuikaew",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=143%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%E0%B8%97%E0%B8%B5%E0%B9%88%2011%20%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B8%A8%E0%B8%A3%E0%B8%B5%E0%B9%82%E0%B8%9E%E0%B8%98%E0%B8%B4%E0%B9%8C%E0%B8%87%E0%B8%B2%E0%B8%A1%20%E0%B8%95%E0%B8%B3%E0%B8%9A%E0%B8%A5%E0%B8%97%E0%B8%B8%E0%B9%88%E0%B8%87%E0%B8%95%E0%B9%89%E0%B8%AD%E0%B8%A1%20%E0%B8%AD%E0%B8%B3%E0%B9%80%E0%B8%A0%E0%B8%AD%E0%B8%AA%E0%B8%B1%E0%B8%99%E0%B8%9B%E0%B9%88%E0%B8%B2%E0%B8%95%E0%B8%AD%E0%B8%87%20%E0%B8%88%E0%B8%B1%E0%B8%87%E0%B8%AB%E0%B8%A7%E0%B8%B1%E0%B8%94%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B9%83%E0%B8%AB%E0%B8%A1%E0%B9%88%2050120"
+            },
+            {
+                "nameTh": "ภัสรากร สวัสดิ์อารีย์",
+                "nameEn": "Patsarakron Sawataree",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=205%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%E0%B8%97%E0%B8%B5%E0%B9%88%205%20%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B8%97%E0%B9%88%E0%B8%B2%E0%B8%81%E0%B8%B2%E0%B8%99%20%E0%B8%95%E0%B8%B3%E0%B8%9A%E0%B8%A5%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B8%81%E0%B8%A5%E0%B8%B2%E0%B8%87%20%E0%B8%AD%E0%B8%B3%E0%B9%80%E0%B8%A0%E0%B8%AD%E0%B8%AA%E0%B8%B1%E0%B8%99%E0%B8%9B%E0%B9%88%E0%B8%B2%E0%B8%95%E0%B8%AD%E0%B8%87%20%E0%B8%88%E0%B8%B1%E0%B8%87%E0%B8%AB%E0%B8%A7%E0%B8%B1%E0%B8%94%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B9%83%E0%B8%AB%E0%B8%A1%E0%B9%88%2050120"
+            },
+            {
+                "nameTh": "ทัญกานร์ ยานะโส",
+                "nameEn": "Tanyakan yanaso",
+                "category": "งานผ้าและสิ่งทอ",
+                "link": "https://www.google.com/maps/search/?api=1&query=62%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%E0%B8%97%E0%B8%B5%E0%B9%88%203%20%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B9%80%E0%B8%8A%E0%B8%B4%E0%B8%87%E0%B8%94%E0%B8%AD%E0%B8%A2%20%E0%B8%95%E0%B8%B3%E0%B8%9A%E0%B8%A5%E0%B8%AA%E0%B8%9A%E0%B9%80%E0%B8%95%E0%B8%B5%E0%B9%8A%E0%B8%A2%E0%B8%B0%20%E0%B8%AD%E0%B8%B3%E0%B9%80%E0%B8%A0%E0%B8%AD%E0%B8%88%E0%B8%AD%E0%B8%A1%E0%B8%97%E0%B8%AD%E0%B8%87%20%E0%B8%88%E0%B8%B1%E0%B8%87%E0%B8%AB%E0%B8%A7%E0%B8%B1%E0%B8%94%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B9%83%E0%B8%AB%E0%B8%A1%E0%B9%88%2050160"
+            },
+            {
+                "nameTh": "อรพินท์ บัวเย็น",
+                "nameEn": "Orapin Buayen",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=79/336%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%E0%B8%97%E0%B8%B5%E0%B9%88%202%20%E0%B8%95%E0%B8%B3%E0%B8%9A%E0%B8%A5%E0%B8%95%E0%B8%A5%E0%B8%B2%E0%B8%94%E0%B8%82%E0%B8%A7%E0%B8%B1%E0%B8%8D%20%E0%B8%AD%E0%B8%B3%E0%B9%80%E0%B8%A0%E0%B8%AD%E0%B8%94%E0%B8%AD%E0%B8%A2%E0%B8%AA%E0%B8%B0%E0%B9%80%E0%B8%81%E0%B9%87%E0%B8%94%20%E0%B8%88%E0%B8%B1%E0%B8%87%E0%B8%AB%E0%B8%A7%E0%B8%B1%E0%B8%94%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B9%83%E0%B8%AB%E0%B8%A1%E0%B9%88%2050220"
+            },
+            {
+                "nameTh": "เกษร พรมเป็ง",
+                "nameEn": "Keson Prompeng",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=2/1%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%E0%B8%97%E0%B8%B5%E0%B9%88%201%20%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B8%9B%E0%B9%8A%E0%B8%AD%E0%B8%81%20%E0%B8%95%E0%B8%B3%E0%B8%9A%E0%B8%A5%E0%B8%AB%E0%B9%89%E0%B8%A7%E0%B8%A2%E0%B9%81%E0%B8%81%E0%B9%89%E0%B8%A7%20%E0%B8%AD%E0%B8%B3%E0%B9%80%E0%B8%A0%E0%B8%AD%E0%B9%81%E0%B8%A1%E0%B9%88%E0%B8%AD%E0%B8%AD%E0%B8%99%20%E0%B8%88%E0%B8%B1%E0%B8%87%E0%B8%AB%E0%B8%A7%E0%B8%B1%E0%B8%94%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B9%83%E0%B8%AB%E0%B8%A1%E0%B9%88"
+            },
+            {
+                "nameTh": "นายวชิระ สีจันทร์",
+                "nameEn": "Mr. Wachira Seejun",
+                "category": "เครื่องปั้นดินเผาและเซรามิก",
+                "link": "https://www.google.com/maps/search/?api=1&query=75%20%E0%B8%A1.7%20%E0%B8%95.%E0%B8%AB%E0%B8%99%E0%B8%AD%E0%B8%87%E0%B8%84%E0%B8%A7%E0%B8%B2%E0%B8%A2%20%E0%B8%AD.%E0%B8%AB%E0%B8%B2%E0%B8%87%E0%B8%94%E0%B8%87%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B9%83%E0%B8%AB%E0%B8%A1%E0%B9%88%2050230"
+            },
+            {
+                "nameTh": "นางธัญพร ถนอมวรกุล",
+                "nameEn": "Mrs. Tanyaporn Tanomworrakul",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=24%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%2010%20%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B9%81%E0%B8%A1%E0%B9%88%E0%B8%AA%E0%B8%B2%E0%B8%99%E0%B9%89%E0%B8%AD%E0%B8%A2%20%E0%B8%95.%E0%B9%82%E0%B8%9B%E0%B9%88%E0%B8%87%E0%B9%81%E0%B8%A2%E0%B8%87%20%E0%B8%AD.%E0%B9%81%E0%B8%A1%E0%B9%88%E0%B8%A3%E0%B8%B4%E0%B8%A1%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B9%83%E0%B8%AB%E0%B8%A1%E0%B9%88%2050180"
+            },
+            {
+                "nameTh": "นายพงษ์ศักดิ์ บุญยมหา",
+                "nameEn": "Mr. Pongask Boonyamaha",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=16/26%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%205%20%E0%B8%95.%E0%B8%AA%E0%B8%B1%E0%B8%99%E0%B8%9C%E0%B8%B5%E0%B9%80%E0%B8%AA%E0%B8%B7%E0%B9%89%E0%B8%AD%20%E0%B8%AD.%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B9%83%E0%B8%AB%E0%B8%A1%E0%B9%88%2050300"
+            },
+            {
+                "nameTh": "นายยรรยงค์ คำยวง",
+                "nameEn": "Mr. Yunyong Kuamyung",
+                "category": "งานแกะสลัก",
+                "link": "https://www.google.com/maps/search/?api=1&query=127%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%202%20%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B8%96%E0%B8%A7%E0%B8%B2%E0%B8%A2%20%E0%B8%95.%E0%B8%82%E0%B8%B8%E0%B8%99%E0%B8%84%E0%B8%87%20%E0%B8%AD.%E0%B8%AB%E0%B8%B2%E0%B8%87%E0%B8%94%E0%B8%87%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B9%83%E0%B8%AB%E0%B8%A1%E0%B9%88%2050230%20%E0%B9%80%E0%B8%9A%E0%B8%AD%E0%B8%A3%E0%B9%8C%E0%B9%82%E0%B8%97%E0%B8%A3%20089-851-1206"
+            },
+            {
+                "nameTh": "นางสาวกัณณิกา บัวจีน",
+                "nameEn": "Miss Kannika Buacheen",
+                "category": "ร่มบ่อสร้าง",
+                "link": "https://www.google.com/maps/search/?api=1&query=111/2%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%203%20%E0%B8%95.%E0%B8%95%E0%B9%89%E0%B8%99%E0%B9%80%E0%B8%9B%E0%B8%B2%20%E0%B8%AD.%E0%B8%AA%E0%B8%B1%E0%B8%99%E0%B8%81%E0%B8%B3%E0%B9%81%E0%B8%9E%E0%B8%87%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B9%83%E0%B8%AB%E0%B8%A1%E0%B9%88%2050130"
+            },
+            {
+                "nameTh": "นางสาวฐิติยารัตน์ คล่องพิทักษ์",
+                "nameEn": "Miss Thitiyarat Klongphithak",
+                "category": "งานแกะสลัก",
+                "link": "https://www.google.com/maps/search/?api=1&query=146%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%2010%20%E0%B8%95.%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B9%81%E0%B8%A1%20%E0%B8%AD.%E0%B8%AA%E0%B8%B1%E0%B8%99%E0%B8%9B%E0%B9%88%E0%B8%B2%E0%B8%95%E0%B8%AD%E0%B8%87%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B9%83%E0%B8%AB%E0%B8%A1%E0%B9%88%2050120"
+            },
+            {
+                "nameTh": "นางศศิธร มงคลเรืองฤทธิ์",
+                "nameEn": "Mrs. Sasitorn Mongkhonruangrit",
+                "category": "เครื่องประดับและเครื่องเขิน",
+                "link": "https://www.google.com/maps/search/?api=1&query=165%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%2012%20%E0%B8%95.%E0%B9%80%E0%B8%8A%E0%B8%B4%E0%B8%87%E0%B8%94%E0%B8%AD%E0%B8%A2%20%E0%B8%AD.%E0%B8%94%E0%B8%AD%E0%B8%A2%E0%B8%AA%E0%B8%B0%E0%B9%80%E0%B8%81%E0%B9%87%E0%B8%94%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B9%83%E0%B8%AB%E0%B8%A1%E0%B9%88%2050220"
+            },
+            {
+                "nameTh": "มะลิวัลย์ ชุมภูแสน",
+                "nameEn": "Maliwan Chumpusean",
+                "category": "งานผ้าและสิ่งทอ",
+                "link": "https://www.google.com/maps/search/?api=1&query=303%20%E0%B8%A1.7%20%E0%B8%95.%E0%B8%AA%E0%B8%B1%E0%B8%99%E0%B8%A1%E0%B8%AB%E0%B8%B2%E0%B8%9E%E0%B8%99%20%E0%B8%AD.%E0%B9%81%E0%B8%A1%E0%B9%88%E0%B9%81%E0%B8%95%E0%B8%87%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B9%83%E0%B8%AB%E0%B8%A1%E0%B9%88%2050150"
+            },
+            {
+                "nameTh": "กุลจิรา หลวงแก้ว ณัชชา หมอกแสง",
+                "nameEn": "Kunjira Luangkaew Natcha MokSaeng",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=462%20%E0%B8%A1.14%20%E0%B8%95.%E0%B8%A1%E0%B9%88%E0%B8%AD%E0%B8%99%E0%B8%9B%E0%B8%B4%E0%B9%88%E0%B8%99%20%E0%B8%AD.%E0%B8%9D%E0%B8%B2%E0%B8%87%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B9%83%E0%B8%AB%E0%B8%A1%E0%B9%88%2050110%20102%20%E0%B8%A1.14%20%E0%B8%95.%E0%B8%A1%E0%B9%88%E0%B8%AD%E0%B8%99%E0%B8%9B%E0%B8%B4%E0%B9%88%E0%B8%99%20%E0%B8%AD.%E0%B8%9D%E0%B8%B2%E0%B8%87%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B9%83%E0%B8%AB%E0%B8%A1%E0%B9%88%2050110"
+            },
+            {
+                "nameTh": "ณัชรัตน์ ชุมพาณิชศุตม์",
+                "nameEn": "Nutcharath Chumpanichwasut",
+                "category": "งานผ้าและสิ่งทอ",
+                "link": "https://www.google.com/maps/search/?api=1&query=238/30%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B8%A8%E0%B8%B4%E0%B8%A3%E0%B8%B4%E0%B8%A7%E0%B8%B1%E0%B8%92%E0%B8%99%E0%B8%B2%E0%B8%99%E0%B8%B4%E0%B9%80%E0%B8%A7%E0%B8%A8%E0%B8%99%E0%B9%8C%20%E0%B8%A1.6%20%E0%B8%96.%E0%B8%A1%E0%B8%AB%E0%B8%B4%E0%B8%94%E0%B8%A5%20%E0%B8%95.%E0%B8%AB%E0%B8%99%E0%B8%AD%E0%B8%87%E0%B8%AB%E0%B8%AD%E0%B8%A2%20%E0%B8%AD.%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B9%83%E0%B8%AB%E0%B8%A1%E0%B9%88%2050000"
+            },
+            {
+                "nameTh": "จารุณี นันท์บัณฑิต",
+                "nameEn": "Charuni Nanthabanthit",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=27%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%883%E0%B8%95.%E0%B8%94%E0%B8%AD%E0%B8%99%E0%B9%81%E0%B8%81%E0%B9%89%E0%B8%A7%20%E0%B8%AD.%E0%B8%AA%E0%B8%B2%E0%B8%A3%E0%B8%A0%E0%B8%B5%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B9%83%E0%B8%AB%E0%B8%A1%E0%B9%88%2050140"
+            },
+            {
+                "nameTh": "สาริศา คำแสน",
+                "nameEn": "Sarisa Khamsaen",
+                "category": "เครื่องประดับและเครื่องเขิน",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B8%A1.14%20%E0%B8%95.%E0%B8%A1%E0%B9%88%E0%B8%AD%E0%B8%99%E0%B8%9B%E0%B8%B4%E0%B9%88%E0%B8%99%20%E0%B8%AD.%E0%B8%9D%E0%B8%B2%E0%B8%87%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B9%83%E0%B8%AB%E0%B8%A1%E0%B9%88%2050110"
+            },
+            {
+                "nameTh": "ธนพล สายธรรม",
+                "nameEn": "Thanaphon Saitham",
+                "category": "เครื่องปั้นดินเผาและเซรามิก",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B8%9B%E0%B9%88%E0%B8%B2%E0%B8%95%E0%B8%B2%E0%B8%A5%20%E0%B8%95.%E0%B8%AA%E0%B8%B1%E0%B8%99%E0%B8%9C%E0%B8%B1%E0%B8%81%E0%B8%AB%E0%B8%A7%E0%B8%B2%E0%B8%99%20%E0%B8%AD.%E0%B8%AB%E0%B8%B2%E0%B8%87%E0%B8%94%E0%B8%87%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B9%83%E0%B8%AB%E0%B8%A1%E0%B9%88%2050230"
+            },
+            {
+                "nameTh": "กุลปริยา ธรรมอน",
+                "nameEn": "Kulpriya Thamon",
+                "category": "งานผ้าและสิ่งทอ",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B8%A1.14%20%E0%B8%95.%E0%B8%A1%E0%B9%88%E0%B8%AD%E0%B8%99%E0%B8%9B%E0%B8%B4%E0%B9%88%E0%B8%99%20%E0%B8%AD.%E0%B8%9D%E0%B8%B2%E0%B8%87%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B9%83%E0%B8%AB%E0%B8%A1%E0%B9%88%2050110"
+            },
+            {
+                "nameTh": "อฑิตยา พิมพ์พัด",
+                "nameEn": "Atittaya Pimpad",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=151/3%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%884%20%E0%B8%95.%E0%B8%A2%E0%B8%B8%E0%B8%AB%E0%B8%A7%E0%B9%88%E0%B8%B2%20%E0%B8%AD.%E0%B8%AA%E0%B8%B1%E0%B8%99%E0%B8%9B%E0%B9%88%E0%B8%B2%E0%B8%95%E0%B8%AD%E0%B8%87%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B9%83%E0%B8%AB%E0%B8%A1%E0%B9%88%2050120"
+            },
+            {
+                "nameTh": "ฉวีวรรณ กงมะลิ",
+                "nameEn": "Chawiwan Kongmaii",
+                "category": "งานผ้าและสิ่งทอ",
+                "link": "https://www.google.com/maps/search/?api=1&query=203%20%E0%B8%A1.3%20%E0%B8%95.%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B8%A7%E0%B8%B1%E0%B8%94%E0%B8%88%E0%B8%B1%E0%B8%99%E0%B8%97%E0%B8%A3%E0%B9%8C%20%E0%B8%AD.%E0%B8%81%E0%B8%B1%E0%B8%A5%E0%B8%A2%E0%B8%B2%E0%B8%93%E0%B8%B4%E0%B8%A7%E0%B8%B1%E0%B8%92%E0%B8%99%E0%B8%B2%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B9%83%E0%B8%AB%E0%B8%A1%E0%B9%88%2058130"
+            },
+            {
+                "nameTh": "วัชรินทร์ คีรีชัยพฤกษา",
+                "nameEn": "Watcharin Khirichaipruksa",
+                "category": "งานจักสาน",
+                "link": "https://www.google.com/maps/search/?api=1&query=81/1%20%E0%B8%A1.3%20%E0%B8%95.%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B8%A7%E0%B8%B1%E0%B8%94%E0%B8%88%E0%B8%B1%E0%B8%99%E0%B8%97%E0%B8%A3%E0%B9%8C%20%E0%B8%AD.%E0%B8%81%E0%B8%B1%E0%B8%A5%E0%B8%A2%E0%B8%B2%E0%B8%93%E0%B8%B4%E0%B8%A7%E0%B8%B1%E0%B8%92%E0%B8%99%E0%B8%B2%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B9%83%E0%B8%AB%E0%B8%A1%E0%B9%88%2058130"
+            },
+            {
+                "nameTh": "ไพฑูรย์ ปัญญา",
+                "nameEn": "Paitoon Punya",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=22%20%E0%B8%A1.5%20%E0%B8%95.%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B8%81%E0%B8%A5%E0%B8%B2%E0%B8%87%20%E0%B8%AD.%E0%B8%AA%E0%B8%B1%E0%B8%99%E0%B8%9B%E0%B9%88%E0%B8%B2%E0%B8%95%E0%B8%AD%E0%B8%87%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B9%83%E0%B8%AB%E0%B8%A1%E0%B9%88"
+            },
+            {
+                "nameTh": "สุทัศนา จองอูป",
+                "nameEn": "Sutasana Janoob",
+                "category": "งานผ้าและสิ่งทอ",
+                "link": "https://www.google.com/maps/search/?api=1&query=33/1%20%E0%B8%A1.1%20%E0%B8%95.%E0%B8%9A%E0%B8%A7%E0%B8%81%E0%B8%84%E0%B9%89%E0%B8%B2%E0%B8%87%20%E0%B8%AD.%E0%B8%AA%E0%B8%B1%E0%B8%99%E0%B8%81%E0%B8%B3%E0%B9%81%E0%B8%9E%E0%B8%87%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B9%83%E0%B8%AB%E0%B8%A1%E0%B9%88%2050130"
+            },
+            {
+                "nameTh": "ดวงทิพโชติ อ่อนหวาน",
+                "nameEn": "Duangtipchot Onwan",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=193%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%203%20%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B9%81%E0%B8%AB%E0%B8%A7%E0%B8%99%20%E0%B8%AD.%E0%B8%AB%E0%B8%B2%E0%B8%87%E0%B8%94%E0%B8%87%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B9%83%E0%B8%AB%E0%B8%A1%E0%B9%88"
+            },
+            {
+                "nameTh": "อ่อง ลุงหน่อ",
+                "nameEn": "Ong Lungnor",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=620%20%E0%B8%A1.9%20%E0%B8%95.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%94%E0%B8%B2%E0%B8%A7%20%E0%B8%AD.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%94%E0%B8%B2%E0%B8%A7%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B9%83%E0%B8%AB%E0%B8%A1%E0%B9%88%2050170"
+            },
+            {
+                "nameTh": "กรรจิต นาถไตรภพ",
+                "nameEn": "Gonrajit Nattribhop",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=140%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%205%20%E0%B8%95%E0%B8%B3%E0%B8%9A%E0%B8%A5%E0%B8%AA%E0%B8%B1%E0%B8%99%E0%B8%9B%E0%B8%B9%E0%B9%80%E0%B8%A5%E0%B8%A2%20%E0%B8%AD.%E0%B8%94%E0%B8%AD%E0%B8%A2%E0%B8%AA%E0%B8%B0%E0%B9%80%E0%B8%81%E0%B9%87%E0%B8%94%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B9%83%E0%B8%AB%E0%B8%A1%E0%B9%88"
+            },
+            {
+                "nameTh": "ปุณยนุช สัมมาวิภาวีกุล",
+                "nameEn": "Poonyanuch Summavipaveekul",
+                "category": "งานผ้าและสิ่งทอ",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B9%80%E0%B8%A5%E0%B8%82%E0%B8%97%E0%B8%B5%E0%B9%88%205%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%2011%20%E0%B8%95.%E0%B9%81%E0%B8%A1%E0%B9%88%E0%B9%81%E0%B8%9D%E0%B8%81%20%E0%B8%AD.%E0%B8%AA%E0%B8%B1%E0%B8%99%E0%B8%97%E0%B8%A3%E0%B8%B2%E0%B8%A2%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B9%83%E0%B8%AB%E0%B8%A1%E0%B9%88%2050290"
+            },
+            {
+                "nameTh": "เสกสกล หล้าคำมี",
+                "nameEn": "Sakesakon Lakummee",
+                "category": "เครื่องปั้นดินเผาและเซรามิก",
+                "link": "https://www.google.com/maps/search/?api=1&query=30%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%208%20%E0%B8%95.%E0%B9%81%E0%B8%A1%E0%B9%88%E0%B9%82%E0%B8%9B%E0%B9%88%E0%B8%87%20%E0%B8%AD.%E0%B8%94%E0%B8%AD%E0%B8%A2%E0%B8%AA%E0%B8%B0%E0%B9%80%E0%B8%81%E0%B9%87%E0%B8%94%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B9%83%E0%B8%AB%E0%B8%A1%E0%B9%88%2050220"
+            },
+            {
+                "nameTh": "อัมพร ธะนะชัย",
+                "nameEn": "Amporn Tanachai",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B9%80%E0%B8%A5%E0%B8%82%E0%B8%97%E0%B8%B5%E0%B9%88%202%20%E0%B8%96%E0%B8%99%E0%B8%99%E0%B8%AB%E0%B8%99%E0%B9%89%E0%B8%B2%E0%B8%A7%E0%B8%B1%E0%B8%94%E0%B9%80%E0%B8%81%E0%B8%95%20%E0%B8%AD.%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B9%83%E0%B8%AB%E0%B8%A1%E0%B9%88%2050000"
+            },
+            {
+                "nameTh": "นราธิป อนุนิมิตรานนท์",
+                "nameEn": "Naratip Anunimitranon",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=252%20%E0%B8%A1.3%20%E0%B8%9A.%E0%B9%81%E0%B8%9E%E0%B8%B0%E0%B8%82%E0%B8%A7%E0%B8%B2%E0%B8%87%20%E0%B8%95.%E0%B8%99%E0%B9%89%E0%B8%B3%E0%B9%81%E0%B8%9E%E0%B8%A3%E0%B9%88%20%E0%B8%AD.%E0%B8%AB%E0%B8%B2%E0%B8%87%E0%B8%94%E0%B8%87%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B9%83%E0%B8%AB%E0%B8%A1%E0%B9%88%2050230"
+            },
+            {
+                "nameTh": "นฤภร ชวาลทัต",
+                "nameEn": "Naruporn Chavantat",
+                "category": "เครื่องปั้นดินเผาและเซรามิก",
+                "link": "https://www.google.com/maps/search/?api=1&query=2%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%204%20%E0%B8%95.%E0%B8%AA%E0%B8%B1%E0%B8%99%E0%B8%81%E0%B8%B3%E0%B9%81%E0%B8%9E%E0%B8%87%20%E0%B8%AD.%E0%B8%AA%E0%B8%B1%E0%B8%99%E0%B8%81%E0%B8%B3%E0%B9%81%E0%B8%9E%E0%B8%87%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B9%83%E0%B8%AB%E0%B8%A1%E0%B9%88%2050130"
+            },
+            {
+                "nameTh": "สมศรี ทองคำ",
+                "nameEn": "Somsri Thongkam",
+                "category": "งานผ้าและสิ่งทอ",
+                "link": "https://www.google.com/maps/search/?api=1&query=104/1%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%203%20%E0%B8%95.%E0%B8%AB%E0%B9%89%E0%B8%A7%E0%B8%A2%E0%B8%97%E0%B8%A3%E0%B8%B2%E0%B8%A2%20%E0%B8%AD.%E0%B9%81%E0%B8%A1%E0%B9%88%E0%B8%A3%E0%B8%B4%E0%B8%A1%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B9%83%E0%B8%AB%E0%B8%A1%E0%B9%88%2050180"
+            },
+            {
+                "nameTh": "ทวีศักดิ์ อ่องศิริกุล",
+                "nameEn": "Thaweesak Ongsirikul",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=212%20%E0%B8%A1.4%20%E0%B8%95.%E0%B8%82%E0%B8%B5%E0%B9%89%E0%B9%80%E0%B8%AB%E0%B8%A5%E0%B9%87%E0%B8%81%20%E0%B8%AD.%E0%B9%81%E0%B8%A1%E0%B9%88%E0%B8%A3%E0%B8%B4%E0%B8%A1%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B9%83%E0%B8%AB%E0%B8%A1%E0%B9%88%2050180"
+            },
+            {
+                "nameTh": "อนุรักษ์ ค้าแกว่น",
+                "nameEn": "Anurak Khagwaem",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B9%80%E0%B8%A5%E0%B8%82%E0%B8%97%E0%B8%B5%E0%B9%88%20212%20%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B8%8B%E0%B8%B2%E0%B8%87%20%E0%B8%A1.%204%20%E0%B8%95.%E0%B8%82%E0%B8%B5%E0%B9%89%E0%B9%80%E0%B8%AB%E0%B8%A5%E0%B9%87%E0%B8%81%20%E0%B8%AD.%E0%B9%81%E0%B8%A1%E0%B9%88%E0%B8%A3%E0%B8%B4%E0%B8%A1%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B9%83%E0%B8%AB%E0%B8%A1%E0%B9%88%2050180"
+            },
+            {
+                "nameTh": "พณิช เปรมนิรันดร",
+                "nameEn": "Phanit Premnirundon",
+                "category": "เฟอร์นิเจอร์",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B9%80%E0%B8%A5%E0%B8%82%E0%B8%97%E0%B8%B5%E0%B9%88%20206/12%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%203%20%E0%B8%95.%E0%B8%95%E0%B9%89%E0%B8%99%E0%B9%80%E0%B8%9B%E0%B8%B2%20%E0%B8%AD.%E0%B8%AA%E0%B8%B1%E0%B8%99%E0%B8%81%E0%B8%B3%E0%B9%81%E0%B8%9E%E0%B8%87%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B9%83%E0%B8%AB%E0%B8%A1%E0%B9%88%2050130"
+            },
+            {
+                "nameTh": "ดารุณี นันโท",
+                "nameEn": "Darunee Nunto",
+                "category": "เครื่องปั้นดินเผาและเซรามิก",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B9%80%E0%B8%A5%E0%B8%82%E0%B8%97%E0%B8%B5%E0%B9%88%2023%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%205%20%E0%B8%95.%E0%B8%AB%E0%B8%B2%E0%B8%A3%E0%B9%81%E0%B8%81%E0%B9%89%E0%B8%A7%20%E0%B8%AD.%E0%B8%AB%E0%B8%B2%E0%B8%87%E0%B8%94%E0%B8%87%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B9%83%E0%B8%AB%E0%B8%A1%E0%B9%88%2050230%20%E0%B9%80%E0%B8%9A%E0%B8%AD%E0%B8%A3%E0%B9%8C%E0%B9%82%E0%B8%97%E0%B8%A3%E0%B8%A8%E0%B8%B1%E0%B8%9E%E0%B8%97%E0%B9%8C%200628618799"
+            },
+            {
+                "nameTh": "ทรงกฤษณ์ มูลอ้าย",
+                "nameEn": "Songkrit Moonai",
+                "category": "เครื่องปั้นดินเผาและเซรามิก",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B9%80%E0%B8%A5%E0%B8%82%E0%B8%97%E0%B8%B5%E0%B9%88%2025/2%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%2011%20%E0%B8%95.%E0%B8%AA%E0%B8%B1%E0%B8%99%E0%B8%81%E0%B8%B3%E0%B9%81%E0%B8%9E%E0%B8%87%20%E0%B8%AD.%E0%B8%AA%E0%B8%B1%E0%B8%99%E0%B8%81%E0%B8%B3%E0%B9%81%E0%B8%9E%E0%B8%87%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B9%83%E0%B8%AB%E0%B8%A1%E0%B9%88%2050130"
+            },
+            {
+                "nameTh": "อัญชลี แก้วดวงทิพย์",
+                "nameEn": "Unchalee Keawduangthip",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B9%80%E0%B8%A5%E0%B8%82%E0%B8%97%E0%B8%B5%E0%B9%88%2089%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%202%20%E0%B8%95.%E0%B8%9B%E0%B9%88%E0%B8%B2%E0%B8%A5%E0%B8%B2%E0%B8%99%20%E0%B8%AD.%E0%B8%94%E0%B8%AD%E0%B8%A2%E0%B8%AA%E0%B8%B0%E0%B9%80%E0%B8%81%E0%B9%87%E0%B8%94%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B9%83%E0%B8%AB%E0%B8%A1%E0%B9%88%2050220"
+            },
+            {
+                "nameTh": "ณัชชา หมอกแสง",
+                "nameEn": "Nutcha Moksang",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B9%80%E0%B8%A5%E0%B8%82%E0%B8%97%E0%B8%B5%E0%B9%88%20102%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%201%20%E0%B8%95.%E0%B8%A1%E0%B9%88%E0%B8%AD%E0%B8%99%E0%B8%9B%E0%B8%B4%E0%B9%88%E0%B8%99%20%E0%B8%AD.%E0%B8%9D%E0%B8%B2%E0%B8%87%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B9%83%E0%B8%AB%E0%B8%A1%E0%B9%88%2050110"
+            },
+            {
+                "nameTh": "ไม่ระบุชื่อ",
+                "nameEn": "Jittida Tana",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B9%80%E0%B8%A5%E0%B8%82%E0%B8%97%E0%B8%B5%E0%B9%88%20168%20%E0%B8%A1.3%20%E0%B8%95.%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B8%88%E0%B8%B1%E0%B8%99%E0%B8%97%E0%B8%A3%E0%B9%8C%20%E0%B8%AD.%E0%B8%81%E0%B8%B1%E0%B8%A5%E0%B8%A2%E0%B8%B2%E0%B8%93%E0%B8%B4%E0%B8%A7%E0%B8%B1%E0%B8%92%E0%B8%99%E0%B8%B2%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B9%83%E0%B8%AB%E0%B8%A1%E0%B9%88%2058130"
+            },
+            {
+                "nameTh": "ศราวุธ เจิมจันทร์",
+                "nameEn": "Sarawoot Joemjan",
+                "category": "งานจักสาน",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B9%80%E0%B8%A5%E0%B8%82%E0%B8%97%E0%B8%B5%E0%B9%88%2022/1%20%E0%B8%95.%E0%B8%97%E0%B9%88%E0%B8%B2%E0%B8%A8%E0%B8%B2%E0%B8%A5%E0%B8%B2%20%E0%B8%AD.%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B9%83%E0%B8%AB%E0%B8%A1%E0%B9%88%2050000%20%E0%B9%80%E0%B8%9A%E0%B8%AD%E0%B8%A3%E0%B9%8C%E0%B9%82%E0%B8%97%E0%B8%A3%E0%B8%A8%E0%B8%B1%E0%B8%9E%E0%B8%97%E0%B9%8C%200882667468"
+            },
+            {
+                "nameTh": "ศุภชัย จายคำ",
+                "nameEn": "Supachai Jaikham",
+                "category": "เฟอร์นิเจอร์",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B9%80%E0%B8%A5%E0%B8%82%E0%B8%97%E0%B8%B5%E0%B9%88%20135%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%201%20%E0%B8%95.%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%E0%B8%99%E0%B8%B0%20%E0%B8%AD.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%94%E0%B8%B2%E0%B8%A7%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B9%83%E0%B8%AB%E0%B8%A1%E0%B9%88%2050170"
+            },
+            {
+                "nameTh": "นางธัญพร ถนอมวรกุล",
+                "nameEn": "Thanyaphon Tanomvurakul",
+                "category": "งานผ้าและสิ่งทอ",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B9%80%E0%B8%A5%E0%B8%82%E0%B8%97%E0%B8%B5%E0%B9%88%2024%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%2010%20%E0%B8%95.%E0%B9%82%E0%B8%9B%E0%B9%88%E0%B8%87%E0%B9%81%E0%B8%A2%E0%B8%87%20%E0%B8%AD.%E0%B9%81%E0%B8%A1%E0%B9%88%E0%B8%A3%E0%B8%B4%E0%B8%A1%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B9%83%E0%B8%AB%E0%B8%A1%E0%B9%88%2050180"
+            },
+            {
+                "nameTh": "นางสุวิภา อุแสง",
+                "nameEn": "Suwipa Usang",
+                "category": "งานผ้าและสิ่งทอ",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B9%80%E0%B8%A5%E0%B8%82%E0%B8%97%E0%B8%B5%E0%B9%88%2092%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%2014%20%E0%B8%95.%E0%B8%9B%E0%B8%B4%E0%B8%87%E0%B9%82%E0%B8%84%E0%B9%89%E0%B8%87%20%E0%B8%AD.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%94%E0%B8%B2%E0%B8%A7%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B9%83%E0%B8%AB%E0%B8%A1%E0%B9%88%2050170"
+            },
+            {
+                "nameTh": "นางพรทิพย์ เลาหมู่",
+                "nameEn": "Phonthip Laomu",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B9%80%E0%B8%A5%E0%B8%82%E0%B8%97%E0%B8%B5%E0%B9%88%20192/42%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%209%20%E0%B8%95.%E0%B8%9B%E0%B8%B4%E0%B8%87%E0%B9%82%E0%B8%84%E0%B9%89%E0%B8%87%20%E0%B8%AD.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B8%94%E0%B8%B2%E0%B8%A7%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B9%83%E0%B8%AB%E0%B8%A1%E0%B9%88%2050170"
+            },
+            {
+                "nameTh": "นางพรรษา บัวมะลิ",
+                "nameEn": "Pansa Buamali",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B9%80%E0%B8%A5%E0%B8%82%E0%B8%97%E0%B8%B5%E0%B9%88%20142%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%204%20%E0%B8%95.%E0%B8%A5%E0%B8%A7%E0%B8%87%E0%B9%80%E0%B8%AB%E0%B8%99%E0%B8%B7%E0%B8%AD%20%E0%B8%AD.%E0%B8%94%E0%B8%AD%E0%B8%A2%E0%B8%AA%E0%B8%B0%E0%B9%80%E0%B8%81%E0%B9%87%E0%B8%94%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B9%83%E0%B8%AB%E0%B8%A1%E0%B9%88%2050220"
+            },
+            {
+                "nameTh": "นางสาวอรนุช อ่อนสติ",
+                "nameEn": "Oranut Onsati",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B9%80%E0%B8%A5%E0%B8%82%E0%B8%97%E0%B8%B5%E0%B9%88%2084%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%209%20%E0%B8%95.%E0%B8%95%E0%B9%89%E0%B8%99%E0%B9%80%E0%B8%9B%E0%B8%B2%20%E0%B8%AD.%E0%B8%AA%E0%B8%B1%E0%B8%99%E0%B8%81%E0%B8%B3%E0%B9%81%E0%B8%9E%E0%B8%87%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B9%83%E0%B8%AB%E0%B8%A1%E0%B9%88%2050130"
+            },
+            {
+                "nameTh": "นางนิตยา มหาไชยวงศ์",
+                "nameEn": "Nittaya Mahachaiwong",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B9%80%E0%B8%A5%E0%B8%82%E0%B8%97%E0%B8%B5%E0%B9%88%20188/524%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%2010%20%E0%B8%84%E0%B8%B8%E0%B8%A3%E0%B8%B8%E0%B8%AA%E0%B8%A0%E0%B8%B2%20%E0%B8%8B.21%20%E0%B8%95.%E0%B8%AA%E0%B8%B1%E0%B8%99%E0%B8%99%E0%B8%B2%E0%B9%80%E0%B8%A1%E0%B9%89%E0%B8%87%20%E0%B8%AD.%E0%B8%AA%E0%B8%B1%E0%B8%99%E0%B8%97%E0%B8%A3%E0%B8%B2%E0%B8%A2%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B9%83%E0%B8%AB%E0%B8%A1%E0%B9%88%2050210"
+            },
+            {
+                "nameTh": "นางสาวพัชรินทร์ อินทะราชา",
+                "nameEn": "Patcharin Intaracha",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B9%80%E0%B8%A5%E0%B8%82%E0%B8%97%E0%B8%B5%E0%B9%88%20143%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%203%20%E0%B8%95.%E0%B9%81%E0%B8%A1%E0%B9%88%E0%B8%99%E0%B8%B2%E0%B8%88%E0%B8%A3%20%E0%B8%AD.%E0%B9%81%E0%B8%A1%E0%B9%88%E0%B9%81%E0%B8%88%E0%B9%88%E0%B8%A1%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B9%83%E0%B8%AB%E0%B8%A1%E0%B9%88%2050270"
+            },
+            {
+                "nameTh": "นางสุพรรณี เผ่าพงษ์",
+                "nameEn": "Supunnee Paopong",
+                "category": "งานผ้าและสิ่งทอ",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B9%80%E0%B8%A5%E0%B8%82%E0%B8%97%E0%B8%B5%E0%B9%88%20196%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%203%20%E0%B8%95.%E0%B8%AA%E0%B8%9A%E0%B9%80%E0%B8%95%E0%B8%B5%E0%B9%8A%E0%B8%A2%E0%B8%B0%20%E0%B8%AD.%E0%B8%88%E0%B8%AD%E0%B8%A1%E0%B8%97%E0%B8%AD%E0%B8%87%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B9%83%E0%B8%AB%E0%B8%A1%E0%B9%88%2050160"
+            },
+            {
+                "nameTh": "นางสาวพีรดา กรองแก้วพนา",
+                "nameEn": "Peerada Krongkaewphana",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B9%80%E0%B8%A5%E0%B8%82%E0%B8%97%E0%B8%B5%E0%B9%88%2099%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%2014%20%E0%B8%95.%E0%B8%A1%E0%B9%88%E0%B8%AD%E0%B8%99%E0%B8%9B%E0%B8%B4%E0%B9%88%E0%B8%99%20%E0%B8%AD.%E0%B8%9D%E0%B8%B2%E0%B8%87%20%E0%B8%88.%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%87%E0%B9%83%E0%B8%AB%E0%B8%A1%E0%B9%88%2050110"
+            }
+        ]
+    },
+    {
+        "province": "แพร่ (Phrae)",
+        "lat": 18.1446,
+        "lng": 100.1403,
+        "count": 22,
+        "artisans": [
+            {
+                "nameTh": "วิจิตรา สืบแสงจันทร์",
+                "nameEn": "Wijittra Suebsangchan",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=43%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%E0%B8%97%E0%B8%B5%E0%B9%88%2014%20%E0%B8%95%E0%B8%B3%E0%B8%9A%E0%B8%A5%E0%B8%99%E0%B9%89%E0%B8%B3%E0%B8%8A%E0%B8%B3%20%E0%B8%AD%E0%B8%B3%E0%B9%80%E0%B8%A0%E0%B8%AD%E0%B8%AA%E0%B8%B9%E0%B8%87%E0%B9%80%E0%B8%A1%E0%B9%88%E0%B8%99%20%E0%B8%88%E0%B8%B1%E0%B8%87%E0%B8%AB%E0%B8%A7%E0%B8%B1%E0%B8%94%E0%B9%81%E0%B8%9E%E0%B8%A3%E0%B9%88%2054130"
+            },
+            {
+                "nameTh": "รัตติกาล เพ็ชรรัตน์",
+                "nameEn": "Rattikan Phetcharat",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=307/11%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%E0%B8%97%E0%B8%B5%E0%B9%88%202%20%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B8%97%E0%B8%B8%E0%B9%88%E0%B8%87%E0%B9%82%E0%B8%AE%E0%B9%89%E0%B8%87%E0%B9%80%E0%B8%AB%E0%B8%99%E0%B8%B7%E0%B8%AD%20%E0%B8%95%E0%B8%B3%E0%B8%9A%E0%B8%A5%E0%B8%97%E0%B8%B8%E0%B9%88%E0%B8%87%E0%B9%82%E0%B8%AE%E0%B9%89%E0%B8%87%20%E0%B8%AD%E0%B8%B3%E0%B9%80%E0%B8%A0%E0%B8%AD%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%20%E0%B8%88%E0%B8%B1%E0%B8%87%E0%B8%AB%E0%B8%A7%E0%B8%B1%E0%B8%94%E0%B9%81%E0%B8%9E%E0%B8%A3%E0%B9%88%2054000"
+            },
+            {
+                "nameTh": "วริศพันธ์ กุลเมธีภูวสิริ",
+                "nameEn": "Varisphan Kulmetheephuvasiri",
+                "category": "งานผ้าและสิ่งทอ",
+                "link": "https://www.google.com/maps/search/?api=1&query=34%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%E0%B8%97%E0%B8%B5%E0%B9%88%206%20%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B8%97%E0%B8%B8%E0%B9%88%E0%B8%87%E0%B8%A5%E0%B9%89%E0%B8%AD%E0%B8%A1%20%E0%B8%95%E0%B8%B3%E0%B8%9A%E0%B8%A5%E0%B8%AB%E0%B9%89%E0%B8%A7%E0%B8%A2%E0%B8%A1%E0%B9%89%E0%B8%B2%20%E0%B8%AD%E0%B8%B3%E0%B9%80%E0%B8%A0%E0%B8%AD%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%20%E0%B8%88%E0%B8%B1%E0%B8%87%E0%B8%AB%E0%B8%A7%E0%B8%B1%E0%B8%94%E0%B9%81%E0%B8%9E%E0%B8%A3%E0%B9%88%2054000"
+            },
+            {
+                "nameTh": "นางสาวสุวิมล หงษ์สาม",
+                "nameEn": "Miss Suwimon Hongsam",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=40/2%20%E0%B8%A1.5%20%E0%B8%95.%E0%B8%97%E0%B8%B8%E0%B9%88%E0%B8%87%E0%B9%82%E0%B8%AE%E0%B9%89%E0%B8%87%20%E0%B8%AD.%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%20%E0%B8%88.%E0%B9%81%E0%B8%9E%E0%B8%A3%E0%B9%88%2054000%20%E0%B9%80%E0%B8%9A%E0%B8%AD%E0%B8%A3%E0%B9%8C%E0%B9%82%E0%B8%97%E0%B8%A3%20093-289-6291"
+            },
+            {
+                "nameTh": "นายภาสกร แสงด้วง ข้ามสาม",
+                "nameEn": "Mr. Passakorn Sangdoung Khamsam",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=271%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%205%20%E0%B8%95.%E0%B8%97%E0%B8%B8%E0%B9%88%E0%B8%87%E0%B9%82%E0%B8%AE%E0%B9%89%E0%B8%87%20%E0%B8%AD.%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%E0%B9%81%E0%B8%9E%E0%B8%A3%E0%B9%88%20%E0%B8%88.%E0%B9%81%E0%B8%9E%E0%B8%A3%E0%B9%88%2054000"
+            },
+            {
+                "nameTh": "นันทนิจ บอยด์",
+                "nameEn": "Nanthanit Boyd",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=286%20%E0%B8%A1.6%20%E0%B8%95.%E0%B8%97%E0%B8%B8%E0%B9%88%E0%B8%87%E0%B9%82%E0%B8%AE%E0%B9%89%E0%B8%87%20%E0%B8%AD.%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%E0%B9%81%E0%B8%9E%E0%B8%A3%E0%B9%88%20%E0%B8%88.%E0%B9%81%E0%B8%9E%E0%B8%A3%E0%B9%88%2054000"
+            },
+            {
+                "nameTh": "ธัชพงศ์ พัฒนาสารินทร์",
+                "nameEn": "Touchapong Pattanasarin",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=1%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%2011%20%E0%B8%95.%E0%B9%81%E0%B8%A1%E0%B9%88%E0%B8%84%E0%B8%B3%E0%B8%A1%E0%B8%B5%20%E0%B8%AD.%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%20%E0%B8%88.%E0%B9%81%E0%B8%9E%E0%B8%A3%E0%B9%88%2054000"
+            },
+            {
+                "nameTh": "สุพัตรา นุ่นวงกต",
+                "nameEn": "Supattra Nunwangkad",
+                "category": "งานผ้าและสิ่งทอ",
+                "link": "https://www.google.com/maps/search/?api=1&query=249%20%E0%B8%A1.5%20%E0%B8%95.%E0%B8%97%E0%B8%B8%E0%B9%88%E0%B8%87%E0%B9%82%E0%B8%AE%E0%B9%89%E0%B8%87%20%E0%B8%AD.%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%20%E0%B8%88.%E0%B9%81%E0%B8%9E%E0%B8%A3%E0%B9%88%2054000"
+            },
+            {
+                "nameTh": "อธิสรรค์ ประพันธ์วัฒนะ",
+                "nameEn": "Athisun Prapanwattana",
+                "category": "กระดาษสา",
+                "link": "https://www.google.com/maps/search/?api=1&query=126/1%20%E0%B8%A1.3%20%E0%B8%95.%E0%B9%80%E0%B8%94%E0%B9%88%E0%B8%99%E0%B8%8A%E0%B8%B1%E0%B8%A2%20%E0%B8%AD.%E0%B9%80%E0%B8%94%E0%B9%88%E0%B8%99%E0%B8%8A%E0%B8%B1%E0%B8%A2%20%E0%B8%88.%E0%B9%81%E0%B8%9E%E0%B8%A3%E0%B9%88%2054110"
+            },
+            {
+                "nameTh": "อรญา สินทรัพย์",
+                "nameEn": "Oraya Sinsup",
+                "category": "งานผ้าและสิ่งทอ",
+                "link": "https://www.google.com/maps/search/?api=1&query=96/2%20%E0%B8%A1.1%20%E0%B8%95.%E0%B8%AA%E0%B8%9A%E0%B8%AA%E0%B8%B2%E0%B8%A2%20%E0%B8%AD.%E0%B8%AA%E0%B8%B9%E0%B8%87%E0%B9%80%E0%B8%A1%E0%B9%88%E0%B8%99%20%E0%B8%88.%E0%B9%81%E0%B8%9E%E0%B8%A3%E0%B9%88%2054130"
+            },
+            {
+                "nameTh": "ชัชชัยวัชร ชังชู",
+                "nameEn": "Chatchaiwat Chongchoo",
+                "category": "เครื่องปั้นดินเผาและเซรามิก",
+                "link": "https://www.google.com/maps/search/?api=1&query=96%20%E0%B8%A1.2%20%E0%B8%95.%E0%B8%9B%E0%B9%88%E0%B8%B2%E0%B9%81%E0%B8%94%E0%B8%87%20%E0%B8%AD.%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%20%E0%B8%88.%E0%B9%81%E0%B8%9E%E0%B8%A3%E0%B9%88%2054000"
+            },
+            {
+                "nameTh": "นภาพร อินทราจักร",
+                "nameEn": "Napaphon Intajak",
+                "category": "เครื่องปั้นดินเผาและเซรามิก",
+                "link": "https://www.google.com/maps/search/?api=1&query=17/2%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%882%20%E0%B8%95.%E0%B8%AB%E0%B8%B1%E0%B8%A7%E0%B8%97%E0%B8%B8%E0%B9%88%E0%B8%87%20%E0%B8%AD.%E0%B8%A5%E0%B8%AD%E0%B8%87%20%E0%B8%88.%E0%B9%81%E0%B8%9E%E0%B8%A3%E0%B9%88%2054150"
+            },
+            {
+                "nameTh": "อนุรักษ์ จักรบุตร",
+                "nameEn": "Address Muang phrae, Phrae, 54000",
+                "category": "งานผ้าและสิ่งทอ",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B8%AD.%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%20%E0%B8%88.%E0%B9%81%E0%B8%9E%E0%B8%A3%E0%B9%88%2054000"
+            },
+            {
+                "nameTh": "หทัยรัตน์ ขันแก้ว",
+                "nameEn": "Hathairath. Khunkaew",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=137/1%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%2011%20%E0%B8%95.%E0%B8%AB%E0%B9%89%E0%B8%A7%E0%B8%A2%E0%B8%AD%E0%B9%89%E0%B8%AD%20%E0%B8%AD.%E0%B8%A5%E0%B8%AD%E0%B8%87%20%E0%B8%88.%E0%B9%81%E0%B8%9E%E0%B8%A3%E0%B9%88%2054150"
+            },
+            {
+                "nameTh": "กิตฐิศักดิ์ สุทิฏฐิพันธุ์",
+                "nameEn": "Kitthisak Suthithipun",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=16%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%205%20%E0%B8%95.%E0%B8%A3%E0%B9%88%E0%B8%AD%E0%B8%87%E0%B8%9F%E0%B8%AD%E0%B8%87%20%E0%B8%AD.%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%20%E0%B8%88.%E0%B9%81%E0%B8%9E%E0%B8%A3%E0%B9%88%2054000"
+            },
+            {
+                "nameTh": "วชิราภรณ์ ภู่ระหงษ์",
+                "nameEn": "Wachiraphorn Phurahong",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=10%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%202%20%E0%B8%95.%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B8%AB%E0%B8%99%E0%B8%B8%E0%B8%99%20%E0%B8%AD.%E0%B8%AA%E0%B8%AD%E0%B8%87%20%E0%B8%88.%E0%B9%81%E0%B8%9E%E0%B8%A3%E0%B9%88%2054120"
+            },
+            {
+                "nameTh": "กัญจนา ปลากุน",
+                "nameEn": "Kunjana Prakun",
+                "category": "งานผ้าและสิ่งทอ",
+                "link": "https://www.google.com/maps/search/?api=1&query=53%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%208%20%E0%B8%95.%E0%B8%AB%E0%B8%B1%E0%B8%A7%E0%B8%97%E0%B8%B8%E0%B9%88%E0%B8%87%20%E0%B8%AD.%E0%B8%A5%E0%B8%AD%E0%B8%87%20%E0%B8%88.%E0%B9%81%E0%B8%9E%E0%B8%A3%E0%B9%88%2054150"
+            },
+            {
+                "nameTh": "กฤษฏนันต์ ทองวิภาวรรณ์",
+                "nameEn": "Krittanan Thongvipawon",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B9%80%E0%B8%A5%E0%B8%82%E0%B8%97%E0%B8%B5%E0%B9%88%2088/2%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%203%20%E0%B8%9A.%E0%B8%99%E0%B8%B2%E0%B9%81%E0%B8%AB%E0%B8%A5%E0%B8%A1%20%E0%B8%95.%E0%B8%97%E0%B8%B8%E0%B9%88%E0%B8%87%E0%B8%81%E0%B8%A7%E0%B8%B2%E0%B8%A7%20%E0%B8%AD.%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%E0%B9%81%E0%B8%9E%E0%B8%A3%E0%B9%88%20%E0%B8%88.%E0%B9%81%E0%B8%9E%E0%B8%A3%E0%B9%88%2054000"
+            },
+            {
+                "nameTh": "พรรษา ทาปัน",
+                "nameEn": "Punsa Tapun",
+                "category": "งานผ้าและสิ่งทอ",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B9%80%E0%B8%A5%E0%B8%82%E0%B8%97%E0%B8%B5%E0%B9%88%2073%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%209%20%E0%B8%95.%E0%B8%AB%E0%B9%89%E0%B8%A7%E0%B8%A2%E0%B8%AD%E0%B9%89%E0%B8%AD%20%E0%B8%AD.%E0%B8%A5%E0%B8%AD%E0%B8%87%20%E0%B8%88.%E0%B9%81%E0%B8%9E%E0%B8%A3%E0%B9%88%2054150"
+            },
+            {
+                "nameTh": "ภาณุมาศ ญาณวุฒิ",
+                "nameEn": "Panumas Yanvudhi",
+                "category": "งานผ้าและสิ่งทอ",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B9%80%E0%B8%A5%E0%B8%82%E0%B8%97%E0%B8%B5%E0%B9%88%20268/5%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%205%20%E0%B8%95.%E0%B8%97%E0%B8%B8%E0%B9%88%E0%B8%87%E0%B9%82%E0%B8%AE%E0%B9%89%E0%B8%87%20%E0%B8%AD.%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%20%E0%B8%88.%E0%B9%81%E0%B8%9E%E0%B8%A3%E0%B9%88%2054000"
+            },
+            {
+                "nameTh": "นางจันทร์เพ็ญ คำเหลือง",
+                "nameEn": "Janphen Khamluang",
+                "category": "งานผ้าและสิ่งทอ",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B9%80%E0%B8%A5%E0%B8%82%E0%B8%97%E0%B8%B5%E0%B9%88%2099/3%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%207%20%E0%B8%95.%E0%B9%81%E0%B8%A1%E0%B9%88%E0%B9%80%E0%B8%81%E0%B8%B4%E0%B9%8B%E0%B8%87%20%E0%B8%AD.%E0%B8%A7%E0%B8%B1%E0%B8%87%E0%B8%8A%E0%B8%B4%E0%B9%89%E0%B8%99%20%E0%B8%88.%E0%B9%81%E0%B8%9E%E0%B8%A3%E0%B9%88%2054160"
+            },
+            {
+                "nameTh": "นายเทพ ถนอม",
+                "nameEn": "Thep Tanon",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B9%80%E0%B8%A5%E0%B8%82%E0%B8%97%E0%B8%B5%E0%B9%88%20131%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%203%20%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B8%A7%E0%B8%B1%E0%B8%87%E0%B8%A7%E0%B8%99%20%E0%B8%95.%E0%B8%AA%E0%B8%9A%E0%B8%AA%E0%B8%B2%E0%B8%A2%20%E0%B8%AD.%E0%B8%AA%E0%B8%B9%E0%B8%87%E0%B9%80%E0%B8%A1%E0%B9%88%E0%B8%99%20%E0%B8%88.%E0%B9%81%E0%B8%9E%E0%B8%A3%E0%B9%88%2054130"
+            }
+        ]
+    },
+    {
+        "province": "แม่ฮ่องสอน (Mae Hong Son)",
+        "lat": 19.302,
+        "lng": 97.9654,
+        "count": 12,
+        "artisans": [
+            {
+                "nameTh": "อารีย์ ประดิษฐ์พันธ์",
+                "nameEn": "Aree Pradithaphan",
+                "category": "งานผ้าและสิ่งทอ",
+                "link": "https://www.google.com/maps/search/?api=1&query=137/3%20%E0%B8%8B%E0%B8%AD%E0%B8%A2%E0%B8%82%E0%B8%B1%E0%B8%A7%E0%B9%80%E0%B8%88%E0%B9%89%E0%B8%B2%E0%B8%9F%E0%B9%89%E0%B8%B2%20%E0%B8%96%E0%B8%99%E0%B8%99%E0%B8%82%E0%B8%B8%E0%B8%99%E0%B8%A5%E0%B8%B8%E0%B8%A1%E0%B8%9B%E0%B8%A3%E0%B8%B0%E0%B8%9E%E0%B8%B2%E0%B8%AA%20%E0%B8%95%E0%B8%B3%E0%B8%9A%E0%B8%A5%E0%B8%88%E0%B8%AD%E0%B8%87%E0%B8%84%E0%B8%B3%20%E0%B8%AD%E0%B8%B3%E0%B9%80%E0%B8%A0%E0%B8%AD%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%20%E0%B8%88%E0%B8%B1%E0%B8%87%E0%B8%AB%E0%B8%A7%E0%B8%B1%E0%B8%94%E0%B9%81%E0%B8%A1%E0%B9%88%E0%B8%AE%E0%B9%88%E0%B8%AD%E0%B8%87%E0%B8%AA%E0%B8%AD%E0%B8%99%2058000"
+            },
+            {
+                "nameTh": "จตุพร เครือซุย",
+                "nameEn": "Jatuphorn Khrueasui",
+                "category": "งานหัตถกรรมอื่นๆ",
+                "link": "https://www.google.com/maps/search/?api=1&query=20%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%E0%B8%97%E0%B8%B5%E0%B9%88%203%20%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B8%9B%E0%B9%88%E0%B8%B2%E0%B9%81%E0%B8%9B%E0%B9%8B%20%E0%B8%95%E0%B8%B3%E0%B8%9A%E0%B8%A5%E0%B8%9B%E0%B9%88%E0%B8%B2%E0%B9%81%E0%B8%9B%E0%B9%8B%20%E0%B8%AD%E0%B8%B3%E0%B9%80%E0%B8%A0%E0%B8%AD%E0%B9%81%E0%B8%A1%E0%B9%88%E0%B8%AA%E0%B8%B0%E0%B9%80%E0%B8%A3%E0%B8%B5%E0%B8%A2%E0%B8%87%20%E0%B8%88%E0%B8%B1%E0%B8%87%E0%B8%AB%E0%B8%A7%E0%B8%B1%E0%B8%94%E0%B9%81%E0%B8%A1%E0%B9%88%E0%B8%AE%E0%B9%88%E0%B8%AD%E0%B8%87%E0%B8%AA%E0%B8%AD%E0%B8%99%2058110"
+            },
+            {
+                "nameTh": "นางสาวสุชาดา มรกตฉาย",
+                "nameEn": "Miss Suchada Morrakotsai",
+                "category": "งานผ้าและสิ่งทอ",
+                "link": "https://www.google.com/maps/search/?api=1&query=205%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%207%20%E0%B8%95.%E0%B8%AA%E0%B8%9A%E0%B9%80%E0%B8%A1%E0%B8%A2%20%E0%B8%AD.%E0%B8%AA%E0%B8%9A%E0%B9%80%E0%B8%A1%E0%B8%A2%20%E0%B8%88.%E0%B9%81%E0%B8%A1%E0%B9%88%E0%B8%AE%E0%B9%88%E0%B8%AD%E0%B8%87%E0%B8%AA%E0%B8%AD%E0%B8%99%2058110"
+            },
+            {
+                "nameTh": "นุศรา ยี่ป๋า",
+                "nameEn": "Nussara Yipa",
+                "category": "งานผ้าและสิ่งทอ",
+                "link": "https://www.google.com/maps/search/?api=1&query=93%20%E0%B8%A1.7%20%E0%B8%95.%E0%B8%AA%E0%B8%9A%E0%B8%9B%E0%B9%88%E0%B8%AD%E0%B8%87%20%E0%B8%AD.%E0%B8%9B%E0%B8%B2%E0%B8%87%E0%B8%A1%E0%B8%B0%E0%B8%9C%E0%B9%89%E0%B8%B2%20%E0%B8%88.%E0%B9%81%E0%B8%A1%E0%B9%88%E0%B8%AE%E0%B9%88%E0%B8%AD%E0%B8%87%E0%B8%AA%E0%B8%AD%E0%B8%99%2058150"
+            },
+            {
+                "nameTh": "จันทรา ศรีธิหล้า",
+                "nameEn": "Chanthara Srithila",
+                "category": "งานผ้าและสิ่งทอ",
+                "link": "https://www.google.com/maps/search/?api=1&query=26%20%E0%B8%A1.9%20%E0%B8%95.%E0%B8%9B%E0%B8%B2%E0%B8%87%E0%B8%A1%E0%B8%B0%E0%B8%9C%E0%B9%89%E0%B8%B2%20%E0%B8%AD.%E0%B8%9B%E0%B8%B2%E0%B8%87%E0%B8%A1%E0%B8%B0%E0%B8%9C%E0%B9%89%E0%B8%B2%20%E0%B8%88.%E0%B9%81%E0%B8%A1%E0%B9%88%E0%B8%AE%E0%B9%88%E0%B8%AD%E0%B8%87%E0%B8%AA%E0%B8%AD%E0%B8%99%2058000%20%E0%B9%80%E0%B8%9A%E0%B8%AD%E0%B8%A3%E0%B9%8C%E0%B9%82%E0%B8%97%E0%B8%A3%2009-7929-1372"
+            },
+            {
+                "nameTh": "อานา มิ่งศรีสุข",
+                "nameEn": "Ana Mingsrisuk",
+                "category": "งานผ้าและสิ่งทอ",
+                "link": "https://www.google.com/maps/search/?api=1&query=25/1%20%E0%B8%A1%206%20%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B8%A5%E0%B8%B0%E0%B8%AD%E0%B8%B9%E0%B8%9A%20%E0%B8%95.%E0%B8%AB%E0%B9%89%E0%B8%A7%E0%B8%A2%E0%B8%AB%E0%B9%89%E0%B8%AD%E0%B8%A1%20%E0%B8%AD.%E0%B9%81%E0%B8%A1%E0%B9%88%E0%B8%A5%E0%B8%B2%E0%B8%99%E0%B9%89%E0%B8%AD%E0%B8%A2%20%E0%B8%88.%E0%B9%81%E0%B8%A1%E0%B9%88%E0%B8%AE%E0%B9%88%E0%B8%AD%E0%B8%87%E0%B8%AA%E0%B8%AD%E0%B8%99%2058120"
+            },
+            {
+                "nameTh": "รวิวรรณ กองวัฒนาสุภา",
+                "nameEn": "Rawiwan Kongwattanasupa",
+                "category": "งานผ้าและสิ่งทอ",
+                "link": "https://www.google.com/maps/search/?api=1&query=82%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%882%20%E0%B8%95.%E0%B8%9C%E0%B8%B2%E0%B8%9A%E0%B9%88%E0%B8%AD%E0%B8%87%20%E0%B8%AD.%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%20%E0%B8%88.%E0%B9%81%E0%B8%A1%E0%B9%88%E0%B8%AE%E0%B9%88%E0%B8%AD%E0%B8%87%E0%B8%AA%E0%B8%AD%E0%B8%99%2058000"
+            },
+            {
+                "nameTh": "บัวทิพย์ เสริมประชา",
+                "nameEn": "Buathip Soermpracha",
+                "category": "งานผ้าและสิ่งทอ",
+                "link": "https://www.google.com/maps/search/?api=1&query=37/2%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%883%20%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B9%81%E0%B8%9E%E0%B8%B0%20%E0%B8%95.%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B8%81%E0%B8%B2%E0%B8%94%20%E0%B8%AD.%E0%B9%81%E0%B8%A1%E0%B9%88%E0%B8%AA%E0%B8%B0%E0%B9%80%E0%B8%A3%E0%B8%B5%E0%B8%A2%E0%B8%87%20%E0%B8%88.%E0%B9%81%E0%B8%A1%E0%B9%88%E0%B8%AE%E0%B9%88%E0%B8%AD%E0%B8%87%E0%B8%AA%E0%B8%AD%E0%B8%99%2058110"
+            },
+            {
+                "nameTh": "สภารัตน์ สิทธิ์คงขจร",
+                "nameEn": "Suparat Sitkongchajons",
+                "category": "งานผ้าและสิ่งทอ",
+                "link": "https://www.google.com/maps/search/?api=1&query=179%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%884%20%E0%B8%95.%E0%B8%AB%E0%B8%A1%E0%B8%AD%E0%B8%81%E0%B8%88%E0%B8%B3%E0%B9%81%E0%B8%9B%E0%B9%88%20%E0%B8%AD.%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%20%E0%B8%88.%E0%B9%81%E0%B8%A1%E0%B9%88%E0%B8%AE%E0%B9%88%E0%B8%AD%E0%B8%87%E0%B8%AA%E0%B8%AD%E0%B8%99%2058000"
+            },
+            {
+                "nameTh": "กานต์ธีรา สืบไมตรี",
+                "nameEn": "Kanthira Suepmaitri",
+                "category": "งานผ้าและสิ่งทอ",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B9%80%E0%B8%A5%E0%B8%82%E0%B8%97%E0%B8%B5%E0%B9%88%20412%20%E0%B8%AB%E0%B8%A1%E0%B8%B8%E0%B9%88%205%20%E0%B8%95.%E0%B8%AA%E0%B8%9A%E0%B9%80%E0%B8%A1%E0%B8%A2%20%E0%B8%AD.%E0%B8%AA%E0%B8%9A%E0%B9%80%E0%B8%A1%E0%B8%A2%20%E0%B8%88.%E0%B9%81%E0%B8%A1%E0%B9%88%E0%B8%AE%E0%B9%88%E0%B8%AD%E0%B8%87%E0%B8%AA%E0%B8%AD%E0%B8%99%2058110"
+            },
+            {
+                "nameTh": "จุฑารัตน์ มหาศักดิ์สิทธ์",
+                "nameEn": "Jutarut Mahasuksit",
+                "category": "งานผ้าและสิ่งทอ",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B9%80%E0%B8%A5%E0%B8%82%E0%B8%97%E0%B8%B5%E0%B9%88%2052/1%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%203%20%E0%B8%95.%E0%B8%9B%E0%B9%88%E0%B8%B2%E0%B9%81%E0%B8%9B%E0%B9%8B%20%E0%B8%AD.%E0%B9%81%E0%B8%A1%E0%B9%88%E0%B8%AA%E0%B8%B0%E0%B9%80%E0%B8%A3%E0%B8%B5%E0%B8%A2%E0%B8%87%20%E0%B8%88.%E0%B9%81%E0%B8%A1%E0%B9%88%E0%B8%AE%E0%B9%88%E0%B8%AD%E0%B8%87%E0%B8%AA%E0%B8%AD%E0%B8%99%2058110"
+            },
+            {
+                "nameTh": "นางอาภาวรรณ ปูชนียะบุคคล",
+                "nameEn": "Arphawan Puchaniyabukkhon",
+                "category": "งานผ้าและสิ่งทอ",
+                "link": "https://www.google.com/maps/search/?api=1&query=%E0%B9%80%E0%B8%A5%E0%B8%82%E0%B8%97%E0%B8%B5%E0%B9%88%2080/1%20%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%205%20%E0%B8%95.%E0%B8%AB%E0%B9%89%E0%B8%A7%E0%B8%A2%E0%B8%AB%E0%B9%89%E0%B8%AD%E0%B8%A1%20%E0%B8%AD.%E0%B9%81%E0%B8%A1%E0%B9%88%E0%B8%A5%E0%B8%B2%E0%B8%99%E0%B9%89%E0%B8%AD%E0%B8%A2%20%E0%B8%88.%E0%B9%81%E0%B8%A1%E0%B9%88%E0%B8%AE%E0%B9%88%E0%B8%AD%E0%B8%87%E0%B8%AA%E0%B8%AD%E0%B8%99%2058120"
+            }
+        ]
+    }
+];
+
+provinceData.forEach(function(data){
+  var sz = data.count > 25 ? 20 : data.count >= 10 ? 14 : 10;
+  var circle = L.circleMarker([data.lat, data.lng],{
+    radius: sz,
+    fillColor: '#1A2A5E',
+    color: '#C0392B',
+    weight: 2.5,
+    opacity: 1,
+    fillOpacity: 0.85
+  }).addTo(map);
+
+  var body = '';
+  data.artisans.forEach(function(a){
+    var fbLink = a.link2 && a.link2.startsWith('http') ?
+      '<a href="'+a.link2+'" target="_blank" class="artisan-link fb">📘 FB</a>' : '';
+    body += '<div class="artisan-item">';
+    body += '<span class="artisan-name">'+(a.nameTh||a.nameEn||'')+'</span>';
+    if(a.nameEn && a.nameTh && a.nameEn!==a.nameTh)
+      body += '<span class="artisan-en">'+a.nameEn+'</span>';
+    if(a.category) body += '<span class="artisan-cat">'+a.category+'</span><br>';
+    body += '<div class="artisan-links">';
+    if(a.link) body += '<a href="'+a.link+'" target="_blank" class="artisan-link">🗺️ แผนที่</a>';
+    body += fbLink;
+    body += '</div></div>';
+  });
+
+  var popup = '<div class="popup-header">'
+    +'<div class="popup-prov">'+data.province+'</div>'
+    +'<div class="popup-count">'+data.count+' ครูช่าง · artisans</div>'
+    +'</div><div class="popup-body">'+body+'</div>';
+
+  circle.bindPopup(popup,{maxWidth:320,maxHeight:420});
+  circle.bindTooltip(data.province+' ('+data.count+')',{
+    permanent:false,direction:'top',className:'',offset:[0,-sz]
+  });
+});
+</script>
+</body>
+</html>
