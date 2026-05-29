@@ -4,229 +4,231 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Koyori — แผนที่ครูช่าง</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Thai:wght@400;600;700&family=Sarabun:wght@300;400;500;600&family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Thai:wght@400;600;700&family=Sarabun:wght@300;400;500;600&family=Prompt:wght@300;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --red:#C0392B;--red2:#E74C3C;--navy:#1A2A5E;--navy2:#2541A8;
-  --white:#fff;--offwhite:#F8F9FF;--light:#EEF1FB;
-  --text:#1A1A2E;--muted:#6B7394;--border:#D8DCF0;
+  --red:#C0392B;--navy:#1A2A5E;--navy2:#2541A8;
+  --cream:#FAF8F5;--white:#fff;--light:#F0F2FA;
+  --text:#1A1A2E;--muted:#8A90A8;--border:#E4E7F0;
 }
-body,html{height:100%;font-family:'Sarabun',sans-serif;background:var(--offwhite)}
+html,body{height:100%;font-family:'Sarabun',sans-serif}
 
-/* HEADER */
-header{background:var(--navy);position:relative}
-.hero-stripe{background:var(--red);height:5px;width:100%}
-.header-inner{
-  max-width:none;padding:.7rem 1.5rem;
-  display:flex;align-items:center;gap:1rem;flex-wrap:wrap;
+/* ── NAV ── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:600;height:52px;
+  background:rgba(255,255,255,0.92);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 1.25rem;gap:.75rem;
 }
-.header-logo{
-  width:38px;height:38px;object-fit:contain;
-  filter:drop-shadow(0 1px 4px rgba(0,0,0,.3));
-}
-.header-logo-fallback{
-  width:38px;height:38px;border-radius:50%;
-  background:linear-gradient(135deg,var(--red),var(--navy2));
+.nav-logo-img{width:32px;height:32px;object-fit:contain}
+.nav-logo-fallback{
+  width:32px;height:32px;border-radius:50%;
+  background:linear-gradient(135deg,var(--red),var(--navy));
   display:flex;align-items:center;justify-content:center;
-  font-family:'Montserrat',sans-serif;font-weight:700;font-size:.8rem;color:#fff;
+  font-family:'Prompt',sans-serif;font-size:.75rem;font-weight:600;color:#fff
 }
-.header-title{
-  font-family:'Noto Serif Thai',serif;font-weight:700;
-  font-size:1rem;color:#fff;line-height:1.2;
+.nav-title{
+  font-family:'Prompt',sans-serif;font-weight:600;font-size:.88rem;
+  color:var(--navy);letter-spacing:.01em;
 }
-.header-sub{font-size:.72rem;color:rgba(255,255,255,0.55)}
-.nav-links{display:flex;gap:.4rem;margin-left:auto;flex-wrap:wrap}
+.nav-sub{font-size:.7rem;color:var(--muted);margin-top:.05rem}
+.nav-links{display:flex;gap:.35rem;margin-left:auto}
 .nav-btn{
-  display:inline-flex;align-items:center;gap:.3rem;
-  padding:.35rem .8rem;border-radius:6px;font-size:.75rem;
-  text-decoration:none;font-family:'Montserrat',sans-serif;font-weight:600;
+  font-size:.75rem;font-family:'Prompt',sans-serif;font-weight:500;
+  padding:.3rem .75rem;border-radius:20px;text-decoration:none;
   transition:all .2s;
 }
-.nav-btn-active{background:var(--red);color:#fff}
-.nav-btn-ghost{color:rgba(255,255,255,.7);background:transparent}
-.nav-btn-ghost:hover{background:rgba(255,255,255,.12);color:#fff}
+.nav-btn-active{background:var(--navy);color:#fff}
+.nav-btn-ghost{color:var(--muted);background:transparent}
+.nav-btn-ghost:hover{background:var(--light);color:var(--navy)}
 
-/* MAP */
-#map{position:fixed;top:0;left:0;right:0;bottom:0;z-index:0}
-header{position:relative;z-index:500}
+/* ── MAP ── */
+#map{position:fixed;inset:0;z-index:0}
 
-/* POPUP */
-.leaflet-popup-content-wrapper{
-  border-radius:12px;border-top:5px solid var(--red);
-  box-shadow:0 8px 30px rgba(26,42,94,.2);
-  font-family:'Sarabun',sans-serif;padding:0;overflow:hidden;
+/* ── LEAFLET OVERRIDES ── */
+.leaflet-control-zoom{
+  border:none!important;
+  box-shadow:0 2px 12px rgba(0,0,0,.1)!important;
+  border-radius:10px!important;overflow:hidden;
+  margin-bottom:1.5rem!important;margin-right:1.25rem!important;
 }
-.leaflet-popup-content{width:300px!important;margin:0;font-size:14px}
-.popup-header{
-  background:var(--navy);color:#fff;
-  padding:.65rem 1rem;
+.leaflet-control-zoom a{
+  background:#fff!important;color:var(--navy)!important;
+  border:none!important;font-size:1rem!important;width:36px!important;height:36px!important;line-height:36px!important;
 }
-.popup-prov{
-  font-family:'Montserrat',sans-serif;font-weight:700;
-  font-size:.85rem;letter-spacing:.02em;
-}
-.popup-count{
-  font-size:.68rem;color:rgba(255,255,255,.6);
-  margin-top:.1rem;
-}
-.popup-body{padding:.6rem .8rem .8rem;max-height:320px;overflow-y:auto}
-.artisan-item{
-  padding:.55rem 0;border-bottom:1px dashed var(--border);
-}
-.artisan-item:last-child{border:none}
-.artisan-name{
-  font-family:'Noto Serif Thai',serif;font-weight:600;
-  color:var(--navy);font-size:.88rem;display:block;
-}
-.artisan-en{color:var(--muted);font-size:.7rem;display:block;margin-bottom:.2rem}
-.artisan-cat{
-  background:#FEF3F2;color:var(--red);
-  padding:.12rem .45rem;border-radius:20px;
-  font-size:.65rem;display:inline-block;margin-bottom:.3rem;font-weight:600;
-}
-.artisan-links{display:flex;gap:.35rem;flex-wrap:wrap;margin-top:.3rem}
-.artisan-link{
-  color:var(--navy2);text-decoration:none;font-size:.68rem;
-  display:inline-flex;align-items:center;gap:.25rem;font-weight:500;
-  padding:.12rem .4rem;background:var(--light);border-radius:4px;
-  transition:all .15s;
-}
-.artisan-link:hover{background:var(--navy2);color:#fff}
-.artisan-link.fb{background:#FEF3F2;color:var(--red)}
-.artisan-link.fb:hover{background:var(--red);color:#fff}
-
-/* LEGEND */
-.legend{
-  position:fixed;bottom:1.5rem;left:1rem;z-index:500;
-  background:rgba(255,255,255,.97);backdrop-filter:blur(8px);
-  border-radius:10px;padding:.8rem 1rem;
-  box-shadow:0 4px 20px rgba(26,42,94,.15);
-  border:1px solid var(--border);
-  font-size:.75rem;color:var(--text);min-width:140px;
-}
-.legend-title{
-  font-family:'Montserrat',sans-serif;font-weight:700;
-  color:var(--navy);margin-bottom:.5rem;font-size:.78rem;
-  display:flex;align-items:center;gap:.35rem;
-}
-.legend-row{display:flex;align-items:center;gap:.5rem;margin-bottom:.25rem}
-.legend-dot{
-  border-radius:50%;background:var(--navy);
-  border:2px solid var(--red);flex-shrink:0;opacity:.85;
+.leaflet-control-zoom a:hover{background:var(--light)!important}
+.leaflet-control-attribution{
+  background:rgba(255,255,255,.7)!important;
+  backdrop-filter:blur(4px);border-radius:6px 0 0 0!important;
+  font-size:.6rem!important;color:var(--muted)!important;
 }
 
-/* ── PROVINCE LABELS ── */
-.prov-label{
-  background:transparent!important;border:none!important;box-shadow:none!important;
-}
+/* ── PROVINCE LABEL ── */
+.prov-label{background:transparent!important;border:none!important;box-shadow:none!important}
 .prov-label-inner{
-  font-family:'Prompt',sans-serif;font-weight:700;font-size:.82rem;
-  color:var(--navy);text-shadow:1px 1px 0 #fff,-1px -1px 0 #fff,1px -1px 0 #fff,-1px 1px 0 #fff,0 2px 4px rgba(0,0,0,.15);
-  white-space:nowrap;pointer-events:none;
+  font-family:'Prompt',sans-serif;font-weight:600;font-size:.78rem;
+  color:var(--navy);
+  text-shadow:0 0 4px #fff,0 0 8px #fff,0 0 12px #fff;
+  white-space:nowrap;pointer-events:none;line-height:1.3;
 }
+.prov-count{font-size:.65rem;color:var(--red);font-weight:500;display:block}
 
-/* ── ARTISAN CARD in POPUP ── */
-.artisan-card{
+/* ── POPUP ── */
+.leaflet-popup-content-wrapper{
+  border:none;border-radius:14px;padding:0;overflow:hidden;
+  box-shadow:0 8px 32px rgba(26,42,94,.18);
+}
+.leaflet-popup-tip{background:#fff}
+.leaflet-popup-content{width:280px!important;margin:0}
+.popup-head{
+  padding:.75rem 1rem .6rem;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:.5rem;
+}
+.popup-dot{width:8px;height:8px;border-radius:50%;background:var(--red);flex-shrink:0}
+.popup-prov{font-family:'Prompt',sans-serif;font-weight:600;font-size:.88rem;color:var(--navy)}
+.popup-count{font-size:.68rem;color:var(--muted);margin-left:auto;white-space:nowrap}
+.popup-list{max-height:300px;overflow-y:auto;padding:.4rem .5rem}
+
+/* scrollbar */
+.popup-list::-webkit-scrollbar{width:3px}
+.popup-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+.a-card{
   display:flex;align-items:center;gap:.6rem;
-  padding:.5rem 0;border-bottom:1px dashed var(--border);
-  cursor:pointer;transition:background .15s;border-radius:6px;
-  padding:.45rem .5rem;margin:0 -.5rem;
+  padding:.45rem .4rem;border-radius:8px;cursor:pointer;
+  transition:background .15s;
 }
-.artisan-card:last-child{border:none}
-.artisan-card:hover{background:var(--light)}
-.artisan-thumb{
-  width:44px;height:44px;border-radius:8px;object-fit:cover;
-  flex-shrink:0;background:var(--light);border:1px solid var(--border);
+.a-card:hover{background:var(--light)}
+.a-thumb{
+  width:40px;height:40px;border-radius:8px;object-fit:cover;
+  flex-shrink:0;border:1px solid var(--border);background:var(--light);
 }
-.artisan-thumb-placeholder{
-  width:44px;height:44px;border-radius:8px;flex-shrink:0;
-  background:linear-gradient(135deg,var(--navy),var(--navy2));
+.a-thumb-ph{
+  width:40px;height:40px;border-radius:8px;flex-shrink:0;
+  background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%);
   display:flex;align-items:center;justify-content:center;
-  font-family:'Montserrat',sans-serif;font-weight:700;font-size:.9rem;color:#fff;
+  font-family:'Prompt',sans-serif;font-weight:700;font-size:.85rem;color:#fff;
 }
-.artisan-info{flex:1;min-width:0}
-.artisan-name{font-family:'Noto Serif Thai',serif;font-weight:600;color:var(--navy);font-size:.85rem;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.artisan-en{color:var(--muted);font-size:.68rem;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.artisan-cat{background:#FEF3F2;color:var(--red);padding:.1rem .4rem;border-radius:20px;font-size:.62rem;display:inline-block;font-weight:600;margin-top:.15rem}
-.artisan-arrow{color:var(--muted);font-size:.8rem;flex-shrink:0}
+.a-info{flex:1;min-width:0}
+.a-name{font-family:'Noto Serif Thai',serif;font-weight:600;font-size:.82rem;color:var(--navy);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.a-en{font-size:.65rem;color:var(--muted);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.a-cat{font-size:.62rem;color:var(--red);display:block;margin-top:.1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.a-arr{color:var(--border);font-size:.85rem;flex-shrink:0}
+.a-card:hover .a-arr{color:var(--muted)}
 
 /* ── SIDE PANEL ── */
-.side-panel{
-  position:fixed;top:49px;right:0;bottom:0;width:340px;
-  background:#fff;border-left:1px solid var(--border);
-  z-index:400;transform:translateX(100%);transition:transform .3s;
+.sp{
+  position:fixed;top:52px;right:0;bottom:0;width:320px;
+  background:var(--white);border-left:1px solid var(--border);
+  z-index:500;transform:translateX(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);
   display:flex;flex-direction:column;
-  box-shadow:-4px 0 20px rgba(0,0,0,.1);
 }
-.side-panel.open{transform:translateX(0)}
-.side-panel-top{height:4px;background:linear-gradient(90deg,var(--navy),var(--red))}
-.side-panel-header{
-  padding:.9rem 1rem;border-bottom:1px solid var(--border);
-  display:flex;align-items:center;justify-content:space-between;
+.sp.open{transform:translateX(0)}
+.sp-imgs{display:grid;grid-template-columns:1fr 1fr;height:190px;overflow:hidden;background:var(--light)}
+.sp-imgs.one{grid-template-columns:1fr}
+.sp-img{width:100%;height:190px;object-fit:cover}
+.sp-img-lbl{font-size:.6rem;font-family:'Prompt',sans-serif;color:var(--muted);text-align:center;padding:.25rem;background:var(--light);text-transform:uppercase;letter-spacing:.08em}
+.sp-body{padding:1rem 1.1rem;overflow-y:auto;flex:1}
+.sp-close{
+  position:absolute;top:.6rem;right:.6rem;
+  background:rgba(255,255,255,.9);border:1px solid var(--border);
+  border-radius:50%;width:28px;height:28px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.75rem;color:var(--muted);transition:all .15s;z-index:10;
 }
-.side-panel-title{font-family:'Prompt',sans-serif;font-weight:600;color:var(--navy);font-size:.95rem}
-.side-panel-close{background:none;border:none;cursor:pointer;color:var(--muted);font-size:1.1rem;padding:.2rem .4rem;border-radius:4px}
-.side-panel-close:hover{color:var(--red)}
-.side-panel-imgs{display:grid;grid-template-columns:1fr 1fr;height:200px;overflow:hidden;background:#F0F3FF}
-.side-panel-imgs.single{grid-template-columns:1fr}
-.side-panel-img{width:100%;height:200px;object-fit:cover}
-.side-panel-img-lbl{font-size:.6rem;font-family:'Montserrat',sans-serif;color:var(--muted);text-align:center;padding:.25rem;background:#F0F3FF;text-transform:uppercase;letter-spacing:.05em}
-.side-panel-body{padding:1rem;overflow-y:auto;flex:1}
-.side-panel-name{font-family:'Noto Serif Thai',serif;font-weight:700;font-size:1.1rem;color:var(--navy)}
-.side-panel-en{font-size:.75rem;color:var(--muted);margin-bottom:.6rem;display:block}
-.side-panel-tags{display:flex;flex-wrap:wrap;gap:.3rem;margin-bottom:.75rem}
-.side-panel-contacts{display:flex;flex-wrap:wrap;gap:.4rem;padding-top:.75rem;border-top:1px solid var(--border)}
+.sp-close:hover{background:var(--red);color:#fff;border-color:var(--red)}
+.sp-name{font-family:'Noto Serif Thai',serif;font-weight:700;font-size:1.05rem;color:var(--navy);margin-bottom:.1rem}
+.sp-en{font-size:.75rem;color:var(--muted);display:block;margin-bottom:.7rem}
+.sp-tags{display:flex;flex-wrap:wrap;gap:.3rem;margin-bottom:.8rem}
+.sp-tag{font-size:.68rem;padding:.18rem .5rem;border-radius:20px;font-weight:500}
+.sp-tag-prov{background:var(--light);color:var(--navy)}
+.sp-tag-cat{background:#FEF3F2;color:var(--red)}
+.sp-tag-id{background:#f5f5f5;color:#aaa;font-family:'Prompt',sans-serif}
+.sp-contacts{display:flex;flex-wrap:wrap;gap:.4rem;padding-top:.75rem;border-top:1px solid var(--border)}
+.sp-btn{
+  font-size:.72rem;text-decoration:none;padding:.28rem .65rem;
+  border-radius:6px;font-weight:500;display:inline-flex;align-items:center;gap:.3rem;
+  transition:all .15s;
+}
+.sp-btn-map{background:var(--light);color:var(--navy2)}
+.sp-btn-map:hover{background:var(--navy2);color:#fff}
+.sp-btn-fb{background:#FEF3F2;color:var(--red)}
+.sp-btn-fb:hover{background:var(--red);color:#fff}
+.sp-btn-phone{background:#F0FFF4;color:#1B5E20}
+.sp-btn-phone:hover{background:#1B5E20;color:#fff}
+
+/* ── LEGEND ── */
+.legend{
+  position:fixed;bottom:1.5rem;left:1rem;z-index:500;
+  background:rgba(255,255,255,.92);backdrop-filter:blur(8px);
+  border-radius:10px;padding:.7rem .9rem;
+  border:1px solid var(--border);
+  font-size:.72rem;color:var(--text);
+  box-shadow:0 2px 12px rgba(0,0,0,.08);
+}
+.legend-title{font-family:'Prompt',sans-serif;font-weight:600;color:var(--navy);margin-bottom:.45rem;font-size:.75rem}
+.legend-row{display:flex;align-items:center;gap:.5rem;margin-bottom:.2rem}
+.legend-dot{border-radius:50%;background:var(--navy);border:2px solid var(--red);flex-shrink:0;opacity:.85}
+
+@media(max-width:560px){
+  .sp{width:100%;top:auto;height:70vh;transform:translateY(100%)}
+  .sp.open{transform:translateY(0)}
+  .nav-sub{display:none}
+}
 </style>
 </head>
 <body>
 
-<header>
-  <div class="hero-stripe"></div>
-  <div class="header-inner">
-    <img src="koyori-logo.jpg" alt="Koyori" class="header-logo"
-         onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-    <div class="header-logo-fallback" style="display:none">K</div>
-    <div>
-      <div class="header-title">แผนที่ครูช่างหัตถศิลป์ล้านนา</div>
-      <div class="header-sub">Koyori Artisan Map · Northern Thailand</div>
-    </div>
-    <div class="nav-links">
-      <a href="index.html" class="nav-btn nav-btn-ghost">🗂️ Directory</a>
-      <a href="map.html"   class="nav-btn nav-btn-active">🗺️ Map</a>
-    </div>
+<nav>
+  <img src="https://res.cloudinary.com/datlmvifg/image/upload/q_auto,f_auto,w_64/koyori_logo_only_iujvaj.png"
+       alt="Koyori" class="nav-logo-img"
+       onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+  <div class="nav-logo-fallback" style="display:none">K</div>
+  <div>
+    <div class="nav-title">ครูช่างโครงการโคโยริ</div>
+    <div class="nav-sub">Koyori Artisan Map</div>
   </div>
-</header>
+  <div class="nav-links">
+    <a href="index.html" class="nav-btn nav-btn-ghost">🗂 Directory</a>
+    <a href="map.html"   class="nav-btn nav-btn-active">🗺 Map</a>
+  </div>
+</nav>
 
 <div id="map"></div>
 
 <div class="legend">
-  <div class="legend-title">⬤ จำนวนช่าง</div>
-  <div class="legend-row">
-    <div class="legend-dot" style="width:28px;height:28px"></div>
-    <span>&gt;25 คน</span>
-  </div>
-  <div class="legend-row">
-    <div class="legend-dot" style="width:18px;height:18px"></div>
-    <span>&le;25 คน</span>
-  </div>
-  <div class="legend-row">
-    <div class="legend-dot" style="width:10px;height:10px"></div>
-    <span>&lt;10 คน</span>
+  <div class="legend-title">จำนวนครูช่าง</div>
+  <div class="legend-row"><div class="legend-dot" style="width:22px;height:22px"></div><span>> 25 คน</span></div>
+  <div class="legend-row"><div class="legend-dot" style="width:16px;height:16px"></div><span>10–25 คน</span></div>
+  <div class="legend-row"><div class="legend-dot" style="width:11px;height:11px"></div><span>< 10 คน</span></div>
+</div>
+
+<!-- SIDE PANEL -->
+<div class="sp" id="sp">
+  <button class="sp-close" onclick="closeSP()">✕</button>
+  <div class="sp-imgs" id="spImgs"></div>
+  <div class="sp-body">
+    <div class="sp-name" id="spName"></div>
+    <span class="sp-en" id="spEn"></span>
+    <div class="sp-tags" id="spTags"></div>
+    <div class="sp-contacts" id="spContacts"></div>
   </div>
 </div>
 
 <script>
-var IMGS={"ART20-008":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934311/ART20-008_product_05_cjqymj.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934309/ART20-008_portrait_01_waokgg.jpg"},"ART20-006":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934309/ART20-006_product_08_lvbqpi.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934308/ART20-006_portrait_01_jzn4ve.jpg"},"ART20-001":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934306/ART20-001_product_01_mhonkr.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934305/ART20-001_portrait_01_b7muda.jpg"},"ART20-007":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934304/ART20-007_product_06_mb11i8.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934302/ART20-007_portrait_01_psewy5.jpg"},"ART20-009":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934302/ART20-009_product_01_npdy3i.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934302/ART20-009_portrait_01_wau2zv.jpg"},"ART20-014":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934300/ART20-014_product_01_xdarjw.jpg"},"ART20-013":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934299/ART20-013_portrait_01_mmnq6v.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934299/ART20-013_product_09_kjd51z.jpg"},"ART20-022":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934296/ART20-022_product_03_uorvfe.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934294/ART20-022_portrait_02_zaj0qo.jpg"},"ART20-023":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934293/ART20-023_product_04_f086md.png","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934292/ART20-023_portrait_03_tvsryp.png"},"ART20-024":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934291/ART20-024_product_01_gpqvd0.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934290/ART20-024_portrait_01_j05cap.jpg"},"ART20-012":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934289/ART20-012_portrait_01_t2a9dr.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934288/ART20-012_product_07_cbrh21.jpg"},"ART20-015":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934286/ART20-015_portrait_02_dhva8k.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934285/ART20-015_product_04_hw7ess.jpg"},"ART20-002":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934284/ART20-002_portrait_01_l7lvk6.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934284/ART20-002_product_08_z4llp2.jpg"},"ART20-005":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934281/ART20-005_portrait_05_g1l19u.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934279/ART20-005_product_02_yfhozp.jpg"},"ART20-004":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934278/ART20-004_portrait_01_o7nnjm.png","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934278/ART20-004_product_05_s3hlpq.jpg"},"ART20-003":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934276/ART20-003_portrait_01_u0tupt.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934275/ART20-003_product_05_tzh2km.jpg"},"ART20-010":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934274/ART20-010_portrait_01_p9rdkl.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934272/ART20-010_product_02_lkohfb.jpg"},"ART20-021":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934271/ART20-021_portrait_01_mnjwvt.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934271/ART20-021_product_01_atfjkm.jpg"},"ART20-019":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934268/ART20-019_product_08_uxmfdm.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934267/ART20-019_portrait_01_nlekcb.jpg"},"ART20-018":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934266/ART20-018_portrait_01_idpgbf.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934265/ART20-018_product_03_mbrofl.jpg"},"ART20-020":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934263/ART20-020_product_05_jucl5x.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934262/ART20-020_portrait_02_fxlsgj.jpg"},"ART20-016":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934260/ART20-016_product_05_napxev.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934259/ART20-016_portrait_01_j6d7pm.jpg"},"ART20-011":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934258/ART20-011_product_09_u5bedb.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934256/ART20-011_portrait_01_mhggln.jpg"},"ART21-001":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934255/ART21-001_product_07_wchawk.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934253/ART21-001_portrait_01_kgqktx.jpg"},"ART21-006":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934252/ART21-006_product_01_h9swrc.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934252/ART21-006_portrait_01_x8gtn4.jpg"},"ART21-008":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934251/ART21-008_product_02_zdhlat.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934250/ART21-008_portrait_04_zl3gkr.jpg"},"ART21-009":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934249/ART21-009_product_02_bxjhf6.png"},"ART21-007":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934249/ART21-007_product_01_rh7jst.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934248/ART21-007_portrait_01_lzocgf.jpg"},"ART21-022":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934248/ART21-022_product_01_xcgyho.jpg"},"ART21-025":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934247/ART21-025_product_02_c1dovg.png"},"ART21-013":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934247/ART21-013_product_01_jlxwtc.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934247/ART21-013_portrait_01_ad6bgn.jpg"},"ART21-014":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934246/ART21-014_portrait_03_jaytkn.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934246/ART21-014_product_04_imesz6.jpg"},"ART21-015":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934244/ART21-015_product_01_uwidue.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934244/ART21-015_portrait_01_wqtbv9.jpg"},"ART21-012":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934243/ART21-012_portrait_01_jaqlij.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934243/ART21-012_product_01_tvv7uj.jpg"},"ART21-023":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934243/ART21-023_portrait_01_kd3lna.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934242/ART21-023_product_01_hp6v9a.jpg"},"ART21-024":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934243/ART21-024_product_01_ekkqto.jpg"},"ART21-005":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934242/ART21-005_product_02_tnlm5i.jpg"},"ART21-002":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934241/ART21-002_product_01_yaa6if.jpg"},"ART21-003":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934241/ART21-003_product_01_sicrqs.png","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934241/ART21-003_portrait_01_weulei.jpg"},"ART21-004":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934240/ART21-004_product_01_rgddtl.jpg"},"ART21-019":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934240/ART21-019_product_01_nvj08a.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934239/ART21-019_portrait_01_ol0owa.jpg"},"ART21-026":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934239/ART21-026_product_02_iqmgxo.jpg"},"ART21-021":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934238/ART21-021_product_01_ozvioi.jpg"},"ART21-028":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934238/ART21-028_portrait_01_ohiheo.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934238/ART21-028_product_01_lpk8r4.jpg"},"ART21-017":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934238/ART21-017_product_01_tkjerj.jpg"},"ART21-010":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934237/ART21-010_product_01_zqsmnh.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934237/ART21-010_portrait_01_pqvhcl.jpg"},"ART21-011":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934236/ART21-011_product_01_v67xnh.jpg"},"ART21-029":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934236/ART21-029_product_01_qffxwn.jpg"},"ART21-016":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934235/ART21-016_product_01_yvlngb.jpg"},"ART21-020":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934235/ART21-020_portrait_01_liidju.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934234/ART21-020_product_01_etg7xp.jpg"},"ART21-018":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934234/ART21-018_product_02_muop61.jpg"},"ART21-027":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934233/ART21-027_portrait_07_yimitd.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934231/ART21-027_product_01_ol5oxm.jpg"},"ART23-007":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934230/ART23-007_product_03_te1rxh.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934229/ART23-007_portrait_01_j3tuc4.jpg"},"ART23-009":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934228/ART23-009_portrait_02_cdhj5h.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934227/ART23-009_product_03_jafy1u.jpg"},"ART23-008":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934226/ART23-008_product_01_etsnqy.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934226/ART23-008_portrait_01_co6v3t.jpg"},"ART23-030":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934226/ART23-030_product_06_zyly3k.jpg"},"ART23-006":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934224/ART23-006_portrait_01_etlsme.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934223/ART23-006_product_01_kv6cv5.jpg"},"ART23-001":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934222/ART23-001_product_01_gt9kjn.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934222/ART23-001_portrait_01_aazn2i.jpg"},"ART23-023":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934222/ART23-023_product_01_ivmlrt.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934221/ART23-023_portrait_04_jiunie.jpg"},"ART23-024":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934220/ART23-024_product_03_xlz0b8.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934219/ART23-024_portrait_02_srvthy.jpg"},"ART23-015":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934218/ART23-015_portrait_01_axo5ja.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934218/ART23-015_product_01_nxwvgr.jpg"},"ART23-014":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934217/ART23-014_product_02_vimgy5.jpg"},"ART23-013":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934217/ART23-013_portrait_04_etww9f.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934215/ART23-013_product_01_a7euqe.jpg"},"ART23-025":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934214/ART23-025_product_04_nuz2nb.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934213/ART23-025_portrait_02_heukzl.jpg"},"ART23-022":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934212/ART23-022_product_01_eeejae.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934212/ART23-022_portrait_01_wpaizm.jpg"},"ART23-004":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934211/ART23-004_portrait_01_clp2v1.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934210/ART23-004_product_03_tipnb0.jpg"},"ART23-003":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934209/ART23-003_portrait_02_rpp4ae.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934208/ART23-003_product_01_xcbuoe.jpg"},"ART23-002":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934207/ART23-002_portrait_03_r7nilk.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934206/ART23-002_product_02_nxhl7f.jpg"},"ART23-005":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934205/ART23-005_product_01_fl8kjj.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934205/ART23-005_portrait_01_tasswq.jpg"},"ART23-027":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934204/ART23-027_portrait_04_jb1gct.jpg"},"ART23-018":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934202/ART23-018_portrait_03_ihk0gc.png","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934201/ART23-018_product_01_qgjxg1.png"},"ART23-020":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934200/ART23-020_product_01_mjpkdo.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934200/ART23-020_portrait_01_mrnpum.jpg"},"ART23-016":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934199/ART23-016_portrait_01_ka6sh9.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934198/ART23-016_product_01_npuiqv.jpg"},"ART23-029":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934197/ART23-029_product_04_vkkwr9.jpg"},"ART23-011":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934195/ART23-011_product_08_hixza9.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934193/ART23-011_portrait_02_utzfar.jpg"},"ART23-010":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934192/ART23-010_portrait_02_ihaqhn.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934191/ART23-010_product_04_s5myvz.jpg"},"ART23-017":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934190/ART23-017_portrait_04_rzzajb.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934188/ART23-017_product_01_chuvya.jpg"},"ART23-028":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934188/ART23-028_portrait_06_mwqu2i.jpg"},"ART23-021":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934186/ART23-021_portrait_06_ooynwl.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934184/ART23-021_product_02_qdo2tk.jpg"},"ART23-026":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934184/ART23-026_portrait_01_bufesa.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934183/ART23-026_product_01_g3du1y.jpg"},"ART23-019":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934183/ART23-019_portrait_03_bwqdrp.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934182/ART23-019_product_01_dlps9y.jpg"},"ART24-009":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934181/ART24-009_product_04_kr2kh7.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934180/ART24-009_portrait_01_mrgxbz.jpg"},"ART24-007":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934179/ART24-007_product_01_qd2647.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934178/ART24-007_portrait_01_cwonfy.jpg"},"ART24-001":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934177/ART24-001_product_04_hjdpsw.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934176/ART24-001_portrait_01_opad7p.jpg"},"ART24-006":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934175/ART24-006_product_03_prdkps.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934174/ART24-006_portrait_03_d5tlkc.jpg"},"ART24-030":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934173/ART24-030_portrait_04_l4igjc.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934171/ART24-030_product_02_dxje8n.jpg"},"ART24-008":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934171/ART24-008_product_02_h0w9lo.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934170/ART24-008_portrait_02_ebrrks.jpg"},"ART24-015":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934169/ART24-015_product_02_jniedx.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934168/ART24-015_portrait_03_ziio6u.jpg"},"ART24-012":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934167/ART24-012_product_02_nbphp4.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934166/ART24-012_portrait_01_lwjtky.jpg"},"ART24-024":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934165/ART24-024_product_01_atso6r.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934163/ART24-024_portrait_01_ggsbge.jpg"},"ART24-023":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934163/ART24-023_product_02_yrbvlw.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934162/ART24-023_portrait_02_a71mpp.jpg"},"ART24-022":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934161/ART24-022_portrait_04_moeac0.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934160/ART24-022_product_01_ro3myx.jpg"},"ART24-025":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934159/ART24-025_portrait_01_aiiwf7.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934157/ART24-025_product_02_n9fsjy.jpg"},"ART24-013":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934157/ART24-013_portrait_01_ftqn2v.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934154/ART24-013_product_01_tglfnl.jpg"},"ART24-014":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934154/ART24-014_product_04_qvxcsx.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934154/ART24-014_portrait_03_gpg5jq.jpg"},"ART24-003":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934152/ART24-003_product_03_muh35y.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934152/ART24-003_portrait_01_avsdrt.jpg"},"ART24-004":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934150/ART24-004_portrait_04_laqkly.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934150/ART24-004_product_01_gqaijh.jpg"},"ART24-005":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934148/ART24-005_portrait_02_paest5.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934147/ART24-005_product_02_zrtspk.jpg"},"ART24-002":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934146/ART24-002_portrait_01_vv4bdi.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934146/ART24-002_product_04_sgyo3v.jpg"},"ART24-011":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934144/ART24-011_product_01_kyobto.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934143/ART24-011_portrait_01_n6xxgj.jpg"},"ART24-029":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934143/ART24-029_portrait_02_pbznye.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934142/ART24-029_product_04_sk3qew.jpg"},"ART24-016":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934141/ART24-016_product_02_gezd7a.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934140/ART24-016_portrait_02_m2ku3i.jpg"},"ART24-020":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934139/ART24-020_portrait_05_ylfot6.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934138/ART24-020_product_02_z6gxld.jpg"},"ART24-018":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934137/ART24-018_product_03_qqbxrx.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934137/ART24-018_portrait_01_fcrxze.jpg"},"ART24-027":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934135/ART24-027_portrait_01_nkrm0b.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934135/ART24-027_product_01_nxxawx.jpg"},"ART24-019":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934133/ART24-019_product_01_klkcqw.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934133/ART24-019_portrait_05_ndd226.jpg"},"ART24-026":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934131/ART24-026_portrait_01_aduwoy.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934131/ART24-026_product_04_s53dyy.jpg"},"ART24-021":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934129/ART24-021_portrait_03_ihfbaf.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934128/ART24-021_product_01_uiwcin.jpg"},"ART24-028":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934127/ART24-028_portrait_03_uckhnn.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934126/ART24-028_product_02_pa7r4o.jpg"},"ART24-017":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934125/ART24-017_product_04_dra1bi.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934124/ART24-017_portrait_02_evruua.jpg"},"ART24-010":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934123/ART24-010_product_02_oec8lg.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934123/ART24-010_portrait_04_tpbe38.jpg"},"ART25-007":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934122/ART25-007_product_06_dv25l4.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934121/ART25-007_portrait_01_wani8z.jpg"},"ART25-009":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934119/ART25-009_portrait_04_aidn4j.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934119/ART25-009_product_01_alhi9e.jpg"},"ART25-008":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934118/ART25-008_product_04_sx800v.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934118/ART25-008_portrait_01_xf7iry.jpg"},"ART25-030":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934116/ART25-030_portrait_01_sqwaxd.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934116/ART25-030_product_02_tln9rm.jpg"},"ART25-006":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934114/ART25-006_portrait_04_guy9ef.jpg"},"ART25-001":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934112/ART25-001_portrait_01_cb5xfx.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934111/ART25-001_product_01_rvxhsj.jpg"},"ART25-023":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934110/ART25-023_product_05_gm9cqg.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934108/ART25-023_portrait_02_rezcv3.jpg"},"ART25-024":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934108/ART25-024_product_06_cy3ppn.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934106/ART25-024_portrait_01_umx774.jpg"},"ART25-012":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934106/ART25-012_portrait_01_rzumvs.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934106/ART25-012_product_06_envvba.jpg"},"ART25-015":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934104/ART25-015_portrait_01_x4vete.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934104/ART25-015_product_05_rkwwnh.jpg"},"ART25-014":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934102/ART25-014_portrait_01_a5o6xr.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934102/ART25-014_product_01_u4i5pl.jpg"},"ART25-013":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934100/ART25-013_portrait_01_m6svf2.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934100/ART25-013_product_02_ayuv0r.jpg"},"ART25-025":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934098/ART25-025_product_02_q3drgi.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934097/ART25-025_portrait_01_gz0hxv.jpg"},"ART25-022":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934096/ART25-022_product_01_lkctlv.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934095/ART25-022_portrait_01_lgf9um.jpg"},"ART25-004":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934095/ART25-004_portrait_01_fctrbn.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934094/ART25-004_product_06_ilzoz0.jpg"},"ART25-003":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934093/ART25-003_product_04_z8kxrl.jpg"},"ART25-002":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934091/ART25-002_portrait_07_fb6uvx.jpg"},"ART25-005":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934089/ART25-005_portrait_03_w4gu7b.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934087/ART25-005_product_02_ux1c4g.jpg"},"ART25-027":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934087/ART25-027_product_06_awgcvg.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934085/ART25-027_portrait_01_yc7gvj.jpg"},"ART25-018":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934085/ART25-018_product_02_cccbxx.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934085/ART25-018_portrait_01_yrj7yc.jpg"},"ART25-020":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934083/ART25-020_product_04_wekagc.jpg"},"ART25-016":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934081/ART25-016_product_04_rkzlhl.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934080/ART25-016_portrait_01_urdj9r.jpg"},"ART25-029":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934080/ART25-029_product_01_axg7vc.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934079/ART25-029_portrait_02_pgjeux.jpg"},"ART25-011":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934078/ART25-011_product_07_du47yh.jpg"},"ART25-010":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934076/ART25-010_product_03_r9qviw.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934075/ART25-010_portrait_01_smgfb2.jpg"},"ART25-017":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934074/ART25-017_product_01_il2dq9.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934074/ART25-017_portrait_01_wutpew.jpg"},"ART25-028":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934074/ART25-028_product_05_k57s04.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934072/ART25-028_portrait_02_kmmg04.jpg"},"ART25-021":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934071/ART25-021_portrait_02_hokxu5.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934070/ART25-021_product_01_w8c5qt.jpg"},"ART25-026":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934069/ART25-026_portrait_06_hkpgch.jpg"},"ART25-019":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934067/ART25-019_product_04_qgghz9.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934066/ART25-019_portrait_03_bihrcl.jpg"},"ART22-009":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934065/ART22-009_portrait_01_mmab8m.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934065/ART22-009_product_01_xvdjs4.jpg"},"ART22-007":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934065/ART22-007_product_01_ncio9o.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934065/ART22-007_portrait_01_msgvfw.jpg"},"ART22-001":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934064/ART22-001_product_01_sklian.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934064/ART22-001_portrait_01_lnh6i4.jpg"},"ART22-006":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934064/ART22-006_product_01_qfwr6v.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934063/ART22-006_portrait_01_l4oz6z.jpg"},"ART22-030":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934063/ART22-030_portrait_01_eeavaa.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934063/ART22-030_product_01_c7nf1x.jpg"},"ART22-008":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934063/ART22-008_product_01_vvlzry.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934062/ART22-008_portrait_01_s6qvuo.png"},"ART22-015":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934062/ART22-015_product_01_ooq724.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934062/ART22-015_portrait_01_obuesn.png"},"ART22-012":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934062/ART22-012_portrait_01_jief2f.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934061/ART22-012_product_01_coiglz.jpg"},"ART22-024":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934061/ART22-024_product_01_hvdjhg.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934061/ART22-024_portrait_01_oaoizk.png"},"ART22-023":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934060/ART22-023_product_01_jmdbvp.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934060/ART22-023_portrait_01_kwhgbm.jpg"},"ART22-022":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934060/ART22-022_portrait_01_veicwp.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934060/ART22-022_product_01_zkrlgt.jpg"},"ART22-025":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934059/ART22-025_product_01_gqkdtw.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934059/ART22-025_portrait_01_hblv2x.jpg"},"ART22-003":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934059/ART22-003_product_01_rerywm.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934058/ART22-003_portrait_01_ldaniq.png"},"ART22-004":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934058/ART22-004_product_02_fbjxwk.jpg"},"ART22-005":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934058/ART22-005_product_01_gelkrs.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934057/ART22-005_portrait_01_gvalzd.png"},"ART22-002":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934057/ART22-002_product_01_ez8px0.jpg"},"ART22-011":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934057/ART22-011_product_01_ls8i6j.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934057/ART22-011_portrait_01_rmjwkj.jpg"},"ART22-029":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934056/ART22-029_product_01_vj8h0j.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934056/ART22-029_portrait_01_uow69w.jpg"},"ART22-016":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934056/ART22-016_product_01_o6tiwk.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934055/ART22-016_portrait_01_va7i4u.jpg"},"ART22-020":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934055/ART22-020_product_01_akapbo.jpg"},"ART22-018":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934055/ART22-018_product_01_sbdtqk.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934055/ART22-018_portrait_01_pbasid.jpg"},"ART22-027":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934055/ART22-027_product_01_swsrue.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934054/ART22-027_portrait_01_edq1mf.jpg"},"ART22-019":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934054/ART22-019_product_01_jzcbjq.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934054/ART22-019_portrait_01_rqehh0.jpg"},"ART22-021":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934054/ART22-021_product_01_x6wu9t.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934054/ART22-021_portrait_01_vzwika.jpg"},"ART22-017":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934053/ART22-017_product_02_dmqhkw.jpg"},"ART22-028":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934053/ART22-028_product_02_ingwm4.jpg"},"ART22-010":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934053/ART22-010_product_01_w2okqa.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934052/ART22-010_portrait_01_l39ta7.jpg"},"ART22-026":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934053/ART22-026_product_01_trfj6k.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934053/ART22-026_portrait_01_fzmhlc.jpg"}};
-var map = L.map('map',{zoomControl:true}).setView([18.8, 99.0], 8);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-  attribution:'© <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
+// Tile: CartoDB Positron (clean minimal look)
+var map = L.map('map',{zoomControl:false}).setView([18.8,99.0],8);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{
+  attribution:'&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://openstreetmap.org">OSM</a>',
   maxZoom:18
 }).addTo(map);
+L.control.zoom({position:'bottomright'}).addTo(map);
 
+var IMGS={"ART20-008":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934311/ART20-008_product_05_cjqymj.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934309/ART20-008_portrait_01_waokgg.jpg"},"ART20-006":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934309/ART20-006_product_08_lvbqpi.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934308/ART20-006_portrait_01_jzn4ve.jpg"},"ART20-001":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934306/ART20-001_product_01_mhonkr.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934305/ART20-001_portrait_01_b7muda.jpg"},"ART20-007":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934304/ART20-007_product_06_mb11i8.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934302/ART20-007_portrait_01_psewy5.jpg"},"ART20-009":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934302/ART20-009_product_01_npdy3i.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934302/ART20-009_portrait_01_wau2zv.jpg"},"ART20-014":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934300/ART20-014_product_01_xdarjw.jpg"},"ART20-013":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934299/ART20-013_portrait_01_mmnq6v.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934299/ART20-013_product_09_kjd51z.jpg"},"ART20-022":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934296/ART20-022_product_03_uorvfe.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934294/ART20-022_portrait_02_zaj0qo.jpg"},"ART20-023":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934293/ART20-023_product_04_f086md.png","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934292/ART20-023_portrait_03_tvsryp.png"},"ART20-024":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934291/ART20-024_product_01_gpqvd0.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934290/ART20-024_portrait_01_j05cap.jpg"},"ART20-012":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934289/ART20-012_portrait_01_t2a9dr.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934288/ART20-012_product_07_cbrh21.jpg"},"ART20-015":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934286/ART20-015_portrait_02_dhva8k.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934285/ART20-015_product_04_hw7ess.jpg"},"ART20-002":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934284/ART20-002_portrait_01_l7lvk6.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934284/ART20-002_product_08_z4llp2.jpg"},"ART20-005":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934281/ART20-005_portrait_05_g1l19u.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934279/ART20-005_product_02_yfhozp.jpg"},"ART20-004":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934278/ART20-004_portrait_01_o7nnjm.png","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934278/ART20-004_product_05_s3hlpq.jpg"},"ART20-003":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934276/ART20-003_portrait_01_u0tupt.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934275/ART20-003_product_05_tzh2km.jpg"},"ART20-010":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934274/ART20-010_portrait_01_p9rdkl.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934272/ART20-010_product_02_lkohfb.jpg"},"ART20-021":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934271/ART20-021_portrait_01_mnjwvt.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934271/ART20-021_product_01_atfjkm.jpg"},"ART20-019":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934268/ART20-019_product_08_uxmfdm.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934267/ART20-019_portrait_01_nlekcb.jpg"},"ART20-018":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934266/ART20-018_portrait_01_idpgbf.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934265/ART20-018_product_03_mbrofl.jpg"},"ART20-020":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934263/ART20-020_product_05_jucl5x.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934262/ART20-020_portrait_02_fxlsgj.jpg"},"ART20-016":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934260/ART20-016_product_05_napxev.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934259/ART20-016_portrait_01_j6d7pm.jpg"},"ART20-011":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934258/ART20-011_product_09_u5bedb.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934256/ART20-011_portrait_01_mhggln.jpg"},"ART21-001":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934255/ART21-001_product_07_wchawk.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934253/ART21-001_portrait_01_kgqktx.jpg"},"ART21-006":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934252/ART21-006_product_01_h9swrc.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934252/ART21-006_portrait_01_x8gtn4.jpg"},"ART21-008":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934251/ART21-008_product_02_zdhlat.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934250/ART21-008_portrait_04_zl3gkr.jpg"},"ART21-009":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934249/ART21-009_product_02_bxjhf6.png"},"ART21-007":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934249/ART21-007_product_01_rh7jst.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934248/ART21-007_portrait_01_lzocgf.jpg"},"ART21-022":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934248/ART21-022_product_01_xcgyho.jpg"},"ART21-025":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934247/ART21-025_product_02_c1dovg.png"},"ART21-013":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934247/ART21-013_product_01_jlxwtc.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934247/ART21-013_portrait_01_ad6bgn.jpg"},"ART21-014":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934246/ART21-014_portrait_03_jaytkn.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934246/ART21-014_product_04_imesz6.jpg"},"ART21-015":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934244/ART21-015_product_01_uwidue.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934244/ART21-015_portrait_01_wqtbv9.jpg"},"ART21-012":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934243/ART21-012_portrait_01_jaqlij.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934243/ART21-012_product_01_tvv7uj.jpg"},"ART21-023":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934243/ART21-023_portrait_01_kd3lna.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934242/ART21-023_product_01_hp6v9a.jpg"},"ART21-024":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934243/ART21-024_product_01_ekkqto.jpg"},"ART21-005":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934242/ART21-005_product_02_tnlm5i.jpg"},"ART21-002":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934241/ART21-002_product_01_yaa6if.jpg"},"ART21-003":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934241/ART21-003_product_01_sicrqs.png","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934241/ART21-003_portrait_01_weulei.jpg"},"ART21-004":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934240/ART21-004_product_01_rgddtl.jpg"},"ART21-019":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934240/ART21-019_product_01_nvj08a.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934239/ART21-019_portrait_01_ol0owa.jpg"},"ART21-026":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934239/ART21-026_product_02_iqmgxo.jpg"},"ART21-021":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934238/ART21-021_product_01_ozvioi.jpg"},"ART21-028":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934238/ART21-028_portrait_01_ohiheo.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934238/ART21-028_product_01_lpk8r4.jpg"},"ART21-017":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934238/ART21-017_product_01_tkjerj.jpg"},"ART21-010":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934237/ART21-010_product_01_zqsmnh.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934237/ART21-010_portrait_01_pqvhcl.jpg"},"ART21-011":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934236/ART21-011_product_01_v67xnh.jpg"},"ART21-029":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934236/ART21-029_product_01_qffxwn.jpg"},"ART21-016":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934235/ART21-016_product_01_yvlngb.jpg"},"ART21-020":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934235/ART21-020_portrait_01_liidju.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934234/ART21-020_product_01_etg7xp.jpg"},"ART21-018":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934234/ART21-018_product_02_muop61.jpg"},"ART21-027":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934233/ART21-027_portrait_07_yimitd.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934231/ART21-027_product_01_ol5oxm.jpg"},"ART23-007":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934230/ART23-007_product_03_te1rxh.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934229/ART23-007_portrait_01_j3tuc4.jpg"},"ART23-009":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934228/ART23-009_portrait_02_cdhj5h.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934227/ART23-009_product_03_jafy1u.jpg"},"ART23-008":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934226/ART23-008_product_01_etsnqy.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934226/ART23-008_portrait_01_co6v3t.jpg"},"ART23-030":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934226/ART23-030_product_06_zyly3k.jpg"},"ART23-006":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934224/ART23-006_portrait_01_etlsme.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934223/ART23-006_product_01_kv6cv5.jpg"},"ART23-001":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934222/ART23-001_product_01_gt9kjn.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934222/ART23-001_portrait_01_aazn2i.jpg"},"ART23-023":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934222/ART23-023_product_01_ivmlrt.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934221/ART23-023_portrait_04_jiunie.jpg"},"ART23-024":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934220/ART23-024_product_03_xlz0b8.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934219/ART23-024_portrait_02_srvthy.jpg"},"ART23-015":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934218/ART23-015_portrait_01_axo5ja.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934218/ART23-015_product_01_nxwvgr.jpg"},"ART23-014":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934217/ART23-014_product_02_vimgy5.jpg"},"ART23-013":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934217/ART23-013_portrait_04_etww9f.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934215/ART23-013_product_01_a7euqe.jpg"},"ART23-025":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934214/ART23-025_product_04_nuz2nb.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934213/ART23-025_portrait_02_heukzl.jpg"},"ART23-022":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934212/ART23-022_product_01_eeejae.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934212/ART23-022_portrait_01_wpaizm.jpg"},"ART23-004":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934211/ART23-004_portrait_01_clp2v1.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934210/ART23-004_product_03_tipnb0.jpg"},"ART23-003":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934209/ART23-003_portrait_02_rpp4ae.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934208/ART23-003_product_01_xcbuoe.jpg"},"ART23-002":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934207/ART23-002_portrait_03_r7nilk.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934206/ART23-002_product_02_nxhl7f.jpg"},"ART23-005":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934205/ART23-005_product_01_fl8kjj.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934205/ART23-005_portrait_01_tasswq.jpg"},"ART23-027":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934204/ART23-027_portrait_04_jb1gct.jpg"},"ART23-018":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934202/ART23-018_portrait_03_ihk0gc.png","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934201/ART23-018_product_01_qgjxg1.png"},"ART23-020":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934200/ART23-020_product_01_mjpkdo.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934200/ART23-020_portrait_01_mrnpum.jpg"},"ART23-016":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934199/ART23-016_portrait_01_ka6sh9.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934198/ART23-016_product_01_npuiqv.jpg"},"ART23-029":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934197/ART23-029_product_04_vkkwr9.jpg"},"ART23-011":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934195/ART23-011_product_08_hixza9.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934193/ART23-011_portrait_02_utzfar.jpg"},"ART23-010":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934192/ART23-010_portrait_02_ihaqhn.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934191/ART23-010_product_04_s5myvz.jpg"},"ART23-017":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934190/ART23-017_portrait_04_rzzajb.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934188/ART23-017_product_01_chuvya.jpg"},"ART23-028":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934188/ART23-028_portrait_06_mwqu2i.jpg"},"ART23-021":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934186/ART23-021_portrait_06_ooynwl.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934184/ART23-021_product_02_qdo2tk.jpg"},"ART23-026":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934184/ART23-026_portrait_01_bufesa.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934183/ART23-026_product_01_g3du1y.jpg"},"ART23-019":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934183/ART23-019_portrait_03_bwqdrp.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934182/ART23-019_product_01_dlps9y.jpg"},"ART24-009":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934181/ART24-009_product_04_kr2kh7.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934180/ART24-009_portrait_01_mrgxbz.jpg"},"ART24-007":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934179/ART24-007_product_01_qd2647.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934178/ART24-007_portrait_01_cwonfy.jpg"},"ART24-001":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934177/ART24-001_product_04_hjdpsw.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934176/ART24-001_portrait_01_opad7p.jpg"},"ART24-006":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934175/ART24-006_product_03_prdkps.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934174/ART24-006_portrait_03_d5tlkc.jpg"},"ART24-030":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934173/ART24-030_portrait_04_l4igjc.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934171/ART24-030_product_02_dxje8n.jpg"},"ART24-008":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934171/ART24-008_product_02_h0w9lo.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934170/ART24-008_portrait_02_ebrrks.jpg"},"ART24-015":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934169/ART24-015_product_02_jniedx.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934168/ART24-015_portrait_03_ziio6u.jpg"},"ART24-012":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934167/ART24-012_product_02_nbphp4.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934166/ART24-012_portrait_01_lwjtky.jpg"},"ART24-024":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934165/ART24-024_product_01_atso6r.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934163/ART24-024_portrait_01_ggsbge.jpg"},"ART24-023":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934163/ART24-023_product_02_yrbvlw.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934162/ART24-023_portrait_02_a71mpp.jpg"},"ART24-022":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934161/ART24-022_portrait_04_moeac0.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934160/ART24-022_product_01_ro3myx.jpg"},"ART24-025":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934159/ART24-025_portrait_01_aiiwf7.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934157/ART24-025_product_02_n9fsjy.jpg"},"ART24-013":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934157/ART24-013_portrait_01_ftqn2v.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934154/ART24-013_product_01_tglfnl.jpg"},"ART24-014":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934154/ART24-014_product_04_qvxcsx.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934154/ART24-014_portrait_03_gpg5jq.jpg"},"ART24-003":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934152/ART24-003_product_03_muh35y.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934152/ART24-003_portrait_01_avsdrt.jpg"},"ART24-004":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934150/ART24-004_portrait_04_laqkly.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934150/ART24-004_product_01_gqaijh.jpg"},"ART24-005":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934148/ART24-005_portrait_02_paest5.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934147/ART24-005_product_02_zrtspk.jpg"},"ART24-002":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934146/ART24-002_portrait_01_vv4bdi.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934146/ART24-002_product_04_sgyo3v.jpg"},"ART24-011":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934144/ART24-011_product_01_kyobto.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934143/ART24-011_portrait_01_n6xxgj.jpg"},"ART24-029":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934143/ART24-029_portrait_02_pbznye.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934142/ART24-029_product_04_sk3qew.jpg"},"ART24-016":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934141/ART24-016_product_02_gezd7a.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934140/ART24-016_portrait_02_m2ku3i.jpg"},"ART24-020":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934139/ART24-020_portrait_05_ylfot6.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934138/ART24-020_product_02_z6gxld.jpg"},"ART24-018":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934137/ART24-018_product_03_qqbxrx.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934137/ART24-018_portrait_01_fcrxze.jpg"},"ART24-027":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934135/ART24-027_portrait_01_nkrm0b.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934135/ART24-027_product_01_nxxawx.jpg"},"ART24-019":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934133/ART24-019_product_01_klkcqw.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934133/ART24-019_portrait_05_ndd226.jpg"},"ART24-026":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934131/ART24-026_portrait_01_aduwoy.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934131/ART24-026_product_04_s53dyy.jpg"},"ART24-021":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934129/ART24-021_portrait_03_ihfbaf.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934128/ART24-021_product_01_uiwcin.jpg"},"ART24-028":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934127/ART24-028_portrait_03_uckhnn.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934126/ART24-028_product_02_pa7r4o.jpg"},"ART24-017":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934125/ART24-017_product_04_dra1bi.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934124/ART24-017_portrait_02_evruua.jpg"},"ART24-010":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934123/ART24-010_product_02_oec8lg.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934123/ART24-010_portrait_04_tpbe38.jpg"},"ART25-007":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934122/ART25-007_product_06_dv25l4.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934121/ART25-007_portrait_01_wani8z.jpg"},"ART25-009":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934119/ART25-009_portrait_04_aidn4j.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934119/ART25-009_product_01_alhi9e.jpg"},"ART25-008":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934118/ART25-008_product_04_sx800v.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934118/ART25-008_portrait_01_xf7iry.jpg"},"ART25-030":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934116/ART25-030_portrait_01_sqwaxd.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934116/ART25-030_product_02_tln9rm.jpg"},"ART25-006":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934114/ART25-006_portrait_04_guy9ef.jpg"},"ART25-001":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934112/ART25-001_portrait_01_cb5xfx.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934111/ART25-001_product_01_rvxhsj.jpg"},"ART25-023":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934110/ART25-023_product_05_gm9cqg.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934108/ART25-023_portrait_02_rezcv3.jpg"},"ART25-024":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934108/ART25-024_product_06_cy3ppn.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934106/ART25-024_portrait_01_umx774.jpg"},"ART25-012":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934106/ART25-012_portrait_01_rzumvs.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934106/ART25-012_product_06_envvba.jpg"},"ART25-015":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934104/ART25-015_portrait_01_x4vete.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934104/ART25-015_product_05_rkwwnh.jpg"},"ART25-014":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934102/ART25-014_portrait_01_a5o6xr.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934102/ART25-014_product_01_u4i5pl.jpg"},"ART25-013":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934100/ART25-013_portrait_01_m6svf2.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934100/ART25-013_product_02_ayuv0r.jpg"},"ART25-025":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934098/ART25-025_product_02_q3drgi.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934097/ART25-025_portrait_01_gz0hxv.jpg"},"ART25-022":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934096/ART25-022_product_01_lkctlv.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934095/ART25-022_portrait_01_lgf9um.jpg"},"ART25-004":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934095/ART25-004_portrait_01_fctrbn.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934094/ART25-004_product_06_ilzoz0.jpg"},"ART25-003":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934093/ART25-003_product_04_z8kxrl.jpg"},"ART25-002":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934091/ART25-002_portrait_07_fb6uvx.jpg"},"ART25-005":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934089/ART25-005_portrait_03_w4gu7b.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934087/ART25-005_product_02_ux1c4g.jpg"},"ART25-027":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934087/ART25-027_product_06_awgcvg.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934085/ART25-027_portrait_01_yc7gvj.jpg"},"ART25-018":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934085/ART25-018_product_02_cccbxx.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934085/ART25-018_portrait_01_yrj7yc.jpg"},"ART25-020":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934083/ART25-020_product_04_wekagc.jpg"},"ART25-016":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934081/ART25-016_product_04_rkzlhl.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934080/ART25-016_portrait_01_urdj9r.jpg"},"ART25-029":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934080/ART25-029_product_01_axg7vc.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934079/ART25-029_portrait_02_pgjeux.jpg"},"ART25-011":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934078/ART25-011_product_07_du47yh.jpg"},"ART25-010":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934076/ART25-010_product_03_r9qviw.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934075/ART25-010_portrait_01_smgfb2.jpg"},"ART25-017":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934074/ART25-017_product_01_il2dq9.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934074/ART25-017_portrait_01_wutpew.jpg"},"ART25-028":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934074/ART25-028_product_05_k57s04.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934072/ART25-028_portrait_02_kmmg04.jpg"},"ART25-021":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934071/ART25-021_portrait_02_hokxu5.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934070/ART25-021_product_01_w8c5qt.jpg"},"ART25-026":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934069/ART25-026_portrait_06_hkpgch.jpg"},"ART25-019":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934067/ART25-019_product_04_qgghz9.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934066/ART25-019_portrait_03_bihrcl.jpg"},"ART22-009":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934065/ART22-009_portrait_01_mmab8m.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934065/ART22-009_product_01_xvdjs4.jpg"},"ART22-007":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934065/ART22-007_product_01_ncio9o.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934065/ART22-007_portrait_01_msgvfw.jpg"},"ART22-001":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934064/ART22-001_product_01_sklian.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934064/ART22-001_portrait_01_lnh6i4.jpg"},"ART22-006":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934064/ART22-006_product_01_qfwr6v.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934063/ART22-006_portrait_01_l4oz6z.jpg"},"ART22-030":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934063/ART22-030_portrait_01_eeavaa.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934063/ART22-030_product_01_c7nf1x.jpg"},"ART22-008":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934063/ART22-008_product_01_vvlzry.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934062/ART22-008_portrait_01_s6qvuo.png"},"ART22-015":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934062/ART22-015_product_01_ooq724.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934062/ART22-015_portrait_01_obuesn.png"},"ART22-012":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934062/ART22-012_portrait_01_jief2f.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934061/ART22-012_product_01_coiglz.jpg"},"ART22-024":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934061/ART22-024_product_01_hvdjhg.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934061/ART22-024_portrait_01_oaoizk.png"},"ART22-023":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934060/ART22-023_product_01_jmdbvp.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934060/ART22-023_portrait_01_kwhgbm.jpg"},"ART22-022":{"portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934060/ART22-022_portrait_01_veicwp.jpg","product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934060/ART22-022_product_01_zkrlgt.jpg"},"ART22-025":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934059/ART22-025_product_01_gqkdtw.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934059/ART22-025_portrait_01_hblv2x.jpg"},"ART22-003":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934059/ART22-003_product_01_rerywm.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934058/ART22-003_portrait_01_ldaniq.png"},"ART22-004":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934058/ART22-004_product_02_fbjxwk.jpg"},"ART22-005":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934058/ART22-005_product_01_gelkrs.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934057/ART22-005_portrait_01_gvalzd.png"},"ART22-002":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934057/ART22-002_product_01_ez8px0.jpg"},"ART22-011":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934057/ART22-011_product_01_ls8i6j.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934057/ART22-011_portrait_01_rmjwkj.jpg"},"ART22-029":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934056/ART22-029_product_01_vj8h0j.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934056/ART22-029_portrait_01_uow69w.jpg"},"ART22-016":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934056/ART22-016_product_01_o6tiwk.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934055/ART22-016_portrait_01_va7i4u.jpg"},"ART22-020":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934055/ART22-020_product_01_akapbo.jpg"},"ART22-018":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934055/ART22-018_product_01_sbdtqk.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934055/ART22-018_portrait_01_pbasid.jpg"},"ART22-027":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934055/ART22-027_product_01_swsrue.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934054/ART22-027_portrait_01_edq1mf.jpg"},"ART22-019":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934054/ART22-019_product_01_jzcbjq.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934054/ART22-019_portrait_01_rqehh0.jpg"},"ART22-021":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934054/ART22-021_product_01_x6wu9t.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934054/ART22-021_portrait_01_vzwika.jpg"},"ART22-017":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934053/ART22-017_product_02_dmqhkw.jpg"},"ART22-028":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934053/ART22-028_product_02_ingwm4.jpg"},"ART22-010":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934053/ART22-010_product_01_w2okqa.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934052/ART22-010_portrait_01_l39ta7.jpg"},"ART22-026":{"product":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934053/ART22-026_product_01_trfj6k.jpg","portrait":"https://res.cloudinary.com/datlmvifg/image/upload/v1779934053/ART22-026_portrait_01_fzmhlc.jpg"}};
 var provinceData = [
     {
         "province": "ตาก (Tak)",
@@ -1442,110 +1444,89 @@ var provinceData = [
     }
 ];
 
-provinceData.forEach(function(data){
-  var sz = data.count > 25 ? 22 : data.count >= 10 ? 16 : 11;
-  var circle = L.circleMarker([data.lat, data.lng],{
-    radius: sz,
-    fillColor: '#1A2A5E',
-    color: '#C0392B',
-    weight: 2.5,
-    opacity: 1,
-    fillOpacity: 0.85
+provinceData.forEach(function(d){
+  var sz = d.count>25?22:d.count>=10?16:11;
+
+  // Marker
+  var c = L.circleMarker([d.lat,d.lng],{
+    radius:sz, fillColor:'#1A2A5E', color:'#C0392B',
+    weight:2, opacity:1, fillOpacity:0.82
   }).addTo(map);
 
-  // Province name label
-  var label = L.marker([data.lat, data.lng], {
-    icon: L.divIcon({
-      className: 'prov-label',
-      html: '<div class="prov-label-inner">'+data.province+'<br><span style="font-size:.68rem;font-weight:400;color:var(--red)">'+data.count+' ช่าง</span></div>',
-      iconAnchor: [-sz-4, 0]
+  // Province label
+  L.marker([d.lat,d.lng],{
+    icon:L.divIcon({
+      className:'prov-label',
+      html:'<div class="prov-label-inner">'+d.province+'<span class="prov-count">'+d.count+' คน</span></div>',
+      iconAnchor:[-sz-6,8]
     }),
-    interactive: false
+    interactive:false
   }).addTo(map);
 
-  // Popup with artisan cards
-  var body = '';
-  data.artisans.forEach(function(a){
-    var pid = a.artisanId || a.id || '';
-    var imgData = IMGS[pid] || {};
-    var thumbHtml = imgData.portrait
-      ? '<img class="artisan-thumb" src="'+imgData.portrait+'" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">'
-        +'<div class="artisan-thumb-placeholder" style="display:none">'+(a.nameTh||'?').charAt(0)+'</div>'
-      : '<div class="artisan-thumb-placeholder">'+(a.nameTh||'?').charAt(0)+'</div>';
-
-    body += '<div class="artisan-card" onclick="openSidePanel(\''+pid+'\','+JSON.stringify(a)+')">';
-    body += thumbHtml;
-    body += '<div class="artisan-info">';
-    body += '<span class="artisan-name">'+(a.nameTh||a.nameEn||'')+'</span>';
-    if(a.nameEn && a.nameTh) body += '<span class="artisan-en">'+a.nameEn+'</span>';
-    if(a.category) body += '<span class="artisan-cat">'+a.category+'</span>';
-    body += '</div>';
-    body += '<span class="artisan-arrow">›</span>';
-    body += '</div>';
+  // Popup
+  var body='';
+  d.artisans.forEach(function(a){
+    var pid=a.artisanId||'';
+    var img=IMGS[pid]&&IMGS[pid].portrait?IMGS[pid].portrait:null;
+    var init=(a.nameTh||a.nameEn||'?').replace(/นาย|นาง|นางสาว/g,'').trim().charAt(0);
+    var thumb=img
+      ? '<img class="a-thumb" src="'+img+'" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">'
+        +'<div class="a-thumb-ph" style="display:none">'+init+'</div>'
+      : '<div class="a-thumb-ph">'+init+'</div>';
+    body+='<div class="a-card" onclick=\'openSP("'+pid+'",'+JSON.stringify(a)+')\'>'
+      +thumb
+      +'<div class="a-info">'
+        +'<span class="a-name">'+(a.nameTh||a.nameEn||'')+'</span>'
+        +(a.nameEn&&a.nameTh?'<span class="a-en">'+a.nameEn+'</span>':'')
+        +(a.category?'<span class="a-cat">'+a.category+'</span>':'')
+      +'</div>'
+      +'<span class="a-arr">›</span>'
+      +'</div>';
   });
 
-  var popup = '<div class="popup-header">'
-    +'<div class="popup-prov">'+data.province+'</div>'
-    +'<div class="popup-count">'+data.count+' ครูช่าง</div>'
-    +'</div><div class="popup-body">'+body+'</div>';
-
-  circle.bindPopup(popup, {maxWidth:320, maxHeight:440});
+  c.bindPopup(
+    '<div class="popup-head">'
+      +'<div class="popup-dot"></div>'
+      +'<div class="popup-prov">'+d.province+'</div>'
+      +'<div class="popup-count">'+d.count+' ครูช่าง</div>'
+    +'</div>'
+    +'<div class="popup-list">'+body+'</div>',
+    {maxWidth:290,maxHeight:400}
+  );
 });
 
-// Side panel
-function openSidePanel(pid, a){
-  var imgData = IMGS[pid] || {};
-  var portrait = imgData.portrait || null;
-  var product  = imgData.product  || null;
-
-  var si = document.getElementById('spImgs');
-  if(portrait && product){
-    si.className='side-panel-imgs';
-    si.innerHTML='<div><img class="side-panel-img" src="'+portrait+'" onerror="this.parentNode.style.display=\'none\'"><div class="side-panel-img-lbl">ครูช่าง</div></div>'
-      +'<div><img class="side-panel-img" src="'+product+'" onerror="this.parentNode.style.display=\'none\'"><div class="side-panel-img-lbl">ผลงาน</div></div>';
-  } else if(portrait||product){
-    si.className='side-panel-imgs single';
-    si.innerHTML='<div><img class="side-panel-img" src="'+(portrait||product)+'"><div class="side-panel-img-lbl">'+(portrait?'ครูช่าง':'ผลงาน')+'</div></div>';
+function openSP(pid,a){
+  var img=IMGS[pid]||{};
+  var p=img.portrait||null, pr=img.product||null;
+  var si=document.getElementById('spImgs');
+  if(p&&pr){
+    si.className='sp-imgs';
+    si.innerHTML='<div><img class="sp-img" src="'+p+'" onerror="this.parentNode.style.display=\'none\'"><div class="sp-img-lbl">ครูช่าง</div></div>'
+      +'<div><img class="sp-img" src="'+pr+'" onerror="this.parentNode.style.display=\'none\'"><div class="sp-img-lbl">ผลงาน</div></div>';
+  } else if(p||pr){
+    si.className='sp-imgs one';
+    si.innerHTML='<div><img class="sp-img" src="'+(p||pr)+'"><div class="sp-img-lbl">'+(p?'ครูช่าง':'ผลงาน')+'</div></div>';
   } else {
-    si.className='side-panel-imgs single';
-    si.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:200px;color:#aaa;font-size:.8rem">ยังไม่มีรูปภาพ</div>';
+    si.className='sp-imgs one';
+    si.innerHTML='<div style="height:190px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.8rem">ยังไม่มีรูปภาพ</div>';
   }
-
-  document.getElementById('spName').textContent = a.nameTh||a.nameEn||'';
-  document.getElementById('spNameEn').textContent = (a.nameEn&&a.nameTh)?a.nameEn:'';
-
+  document.getElementById('spName').textContent=a.nameTh||a.nameEn||'';
+  document.getElementById('spEn').textContent=(a.nameEn&&a.nameTh)?a.nameEn:'';
   var tags='';
-  if(a.province) tags+='<span class="tag tag-prov">&#128205; '+a.province+'</span>';
-  if(a.category) tags+='<span class="tag tag-cat">'+a.category+'</span>';
-  if(pid) tags+='<span class="tag tag-id">'+pid+'</span>';
+  if(a.province) tags+='<span class="sp-tag sp-tag-prov">📍 '+a.province+'</span>';
+  if(a.category) tags+='<span class="sp-tag sp-tag-cat">'+a.category+'</span>';
+  if(pid) tags+='<span class="sp-tag sp-tag-id">'+pid+'</span>';
   document.getElementById('spTags').innerHTML=tags;
-
-  var c='';
-  if(a.link) c+='<a href="'+a.link+'" target="_blank" class="contact-btn btn-map">&#128506; แผนที่</a>';
-  if(a.link2&&a.link2.indexOf('http')===0) c+='<a href="'+a.link2+'" target="_blank" class="contact-btn btn-fb">&#128216; Facebook</a>';
-  document.getElementById('spContacts').innerHTML=c;
-  document.getElementById('spContacts').style.display=c?'flex':'none';
-
-  document.getElementById('sidePanel').classList.add('open');
+  var ct='';
+  if(a.link) ct+='<a href="'+a.link+'" target="_blank" class="sp-btn sp-btn-map">🗺️ แผนที่</a>';
+  if(a.phone&&a.phone.length>3) ct+='<a href="tel:'+a.phone.replace(/\s/g,'')+'" class="sp-btn sp-btn-phone">📞 '+a.phone+'</a>';
+  if(a.link2&&a.link2.indexOf('http')===0) ct+='<a href="'+a.link2+'" target="_blank" class="sp-btn sp-btn-fb">📘 Facebook</a>';
+  var sc=document.getElementById('spContacts');
+  sc.innerHTML=ct; sc.style.display=ct?'flex':'none';
+  document.getElementById('sp').classList.add('open');
 }
-function closeSidePanel(){
-  document.getElementById('sidePanel').classList.remove('open');
-}
+function closeSP(){document.getElementById('sp').classList.remove('open');}
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closeSP();});
 </script>
-
-<!-- SIDE PANEL -->
-<div class="side-panel" id="sidePanel">
-  <div class="side-panel-top"></div>
-  <div class="side-panel-header">
-    <div class="side-panel-title" id="spName"></div>
-    <button class="side-panel-close" onclick="closeSidePanel()">&#x2715;</button>
-  </div>
-  <div class="side-panel-imgs" id="spImgs"></div>
-  <div class="side-panel-body">
-    <div class="side-panel-en" id="spNameEn"></div>
-    <div class="side-panel-tags" id="spTags"></div>
-    <div class="side-panel-contacts" id="spContacts"></div>
-  </div>
-</div>
 </body>
 </html>
