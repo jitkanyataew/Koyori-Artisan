@@ -164,7 +164,7 @@ nav{
 /* ── LEGEND ── */
 .legend{
   position:fixed;bottom:1.5rem;left:1rem;z-index:500;
-  background:rgba(255,255,255,.92);backdrop-filter:blur(8px);
+  background:rgba(255,255,255,.95);backdrop-filter:blur(12px);
   border-radius:10px;padding:.7rem .9rem;
   border:1px solid var(--border);
   font-size:.72rem;color:var(--text);
@@ -222,9 +222,10 @@ nav{
 <script>
 // Tile: CartoDB Positron (clean minimal look)
 var map = L.map('map',{zoomControl:false}).setView([18.8,99.0],8);
-L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{
-  attribution:'&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://openstreetmap.org">OSM</a>',
-  maxZoom:18
+// Stadia Toner Lite + color overlay for clear borders
+L.tileLayer('https://tiles.stadiamaps.com/tiles/outdoors/{z}/{x}/{y}{r}.png',{
+  attribution:'&copy; <a href="https://stadiamaps.com/">Stadia Maps</a> &copy; <a href="https://openstreetmap.org">OSM</a>',
+  maxZoom:20
 }).addTo(map);
 L.control.zoom({position:'bottomright'}).addTo(map);
 
@@ -1449,8 +1450,8 @@ provinceData.forEach(function(d){
 
   // Marker
   var c = L.circleMarker([d.lat,d.lng],{
-    radius:sz, fillColor:'#1A2A5E', color:'#C0392B',
-    weight:2, opacity:1, fillOpacity:0.82
+    radius:sz, fillColor:'#1A2A5E', color:'#ffffff',
+    weight:2.5, opacity:1, fillOpacity:0.9
   }).addTo(map);
 
   // Province label
